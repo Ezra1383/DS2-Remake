@@ -20,7 +20,7 @@ Last updated **4 September 2026** (Day 2 of 30). Ship date **3 October 2026**.
 | Input | New Input System 1.20 — `activeInputHandler: 1`, **new system only**, old `Input` API unavailable |
 | Camera | Cinemachine **6.6.0** (the CM3 line under Unity 6 versioning) |
 | Also present | AI Navigation 2.0.14, Timeline 6.6, uGUI 2.6, Visual Scripting 1.9.12, Test Framework 1.8 |
-| Input asset | `Assets/InputSystem_Actions.inputactions` — Unity 6 template. Player map has Move, Look, Attack, Sprint, Jump, Crouch, Interact. **Extend this, don't author a second one.** |
+| Input asset | `Assets/InputSystem_Actions.inputactions` — Unity 6 template, **extend it, don't author a second one**. Template actions: Move, Look, Attack, Sprint, Jump, Crouch, Interact. Added 4 Sep: **Dodge** (Space / buttonEast), **LockOn** (Q / rightStickPress), **Stance** (R / buttonNorth). `generateWrapperCode` is off — scripts take an `InputActionAsset` reference and resolve by name, so no codegen step. |
 
 ---
 
@@ -72,6 +72,21 @@ Four things this settled:
 Naming traps: **`Hit1` is `K_Hit_R.fbx`, `Hit2` is `K_Hit_L.fbx`** — the clip names carry no side
 information, so don't guess in `HitReaction.cs`. And Skill 2's clip is `K_Sp_Skill_2` while Skills
 1 and 3 are `Sp_Skill1` / `Sp_Skill3`.
+
+### No strafe animations
+
+The locomotion set is `Idle`, `Walk`, `Run` and nothing else — **no strafe, no walk-back**. This is
+the single biggest asset limitation in the project and it constrains design, not just polish:
+
+- Lock-on cannot hold her facing at the target while moving; a forward walk played across a sideways
+  translation reads as skating. She turns to face travel instead.
+- Backing away plays a forward walk — and backing off is a core defensive verb in a game with no block.
+- Mild residual foot slide on the run cycle.
+
+Authoring **Walk_Back / Strafe_L / Strafe_R** closes all three. `MoveX` and `MoveY` already exist in
+`KG_Combat` and are already written every frame by `PlayerLocomotion`, so the work is: swap the 1D
+`Speed` blend tree for a 2D one, and delete the facing special-case in
+`PlayerLocomotion.UpdateRotation`. Nothing else depends on it.
 
 ### 2.2 Weapon sockets — do not break this
 
@@ -208,6 +223,9 @@ late in the schedule.
 | **Cinemachine 3** over a hand-written `LockOnCamera` | Orbital follow, target-group framing and Impulse shake out of the box; saves ~1.5 days and feeds the week-3 juice pass. |
 | **UTS toon shader** over URP/Lit | URP/Lit silently kills `SDFFaceShadowController` (its `_UseSDFShadow` / `_FaceForward` properties don't exist on Lit), the outline pass, and the blade matcap. Silhouette readability is mechanical here, not just aesthetic — telegraphs have to read at speed. |
 | Player root = **the character prefab root itself** | The Animator lives there; a separate parent GameObject just fights root motion. |
+| **One `controller.Move()` call**, in `OnAnimatorMove` | Root motion and scripted movement must never both write position in the same frame. A `RootMotionDriven` flag picks the source; `OnAnimatorMove` is also the only point where `animator.deltaPosition` is valid. |
+| Lock-on drives the **orbit yaw**, not just `LookAt` | Dark Souls puts the camera on the line from enemy through player. A `CinemachineTargetGroup` alone centres the shot *between* them, which frames both but leaves the camera wherever the player last pointed it. Driving `CinemachineOrbitalFollow.HorizontalAxis.Value` toward the player-to-target yaw is what puts it behind her. Needs Binding Mode = World Space, or the angle is measured against a player who is constantly turning. |
+| **She faces her direction of travel, even locked on** | Forced by the asset — see *No strafe animations* below. |
 | `Humanoid_F_Katana` as the week-1 dummy | No Magica dependency, no toon-shader dependency, same avatar, 30× smaller prefab. |
 
 **Schedule correction:** the design doc's masthead promises a three-day buffer, but Day N =
@@ -225,12 +243,19 @@ Magica Cloth stripped from the character prefab; `Arena.unity` built (floor, bou
 Dome, `CinemachineCamera`) and registered in Build Settings; repo cleaned and re-initialised
 (1.4 GB → 165 MB, 29,681 → 914 tracked files).
 
-**Phase 0 — remaining:**
-1. Make the character a **Prefab Variant** in `_Game/Prefabs/` and restore the vendor `Prefab/`
-   folder — see §2.3. Blocking for Step 1.2, which adds components to it.
-2. Place `Humanoid_F_Katana` in the arena as the training dummy.
-3. Revert `Katana_Girl_Scene.unity` from git with that scene closed in Unity.
+**Phase 0 — closed 4 Sep.** `KatanaGirl.prefab` and `TrainingDummy.prefab` exist as Prefab Variants
+in `_Game/Prefabs/`, the arena references them, and the repo is pushed.
 
-**Next:** `build-plan.md` Step 1.1 — `MoveDefinition.cs` and `KG_Combat.controller`. All nine speed
-multipliers are already measured and sit at 1.96–2.04; copy them from the *Measured frame data*
-table rather than recomputing.
+**Step 1.1 — done 4 Sep.** `MoveDefinition.cs` plus 13 move assets in `_Game/Moves/` (nine table rows,
+but Quick Shift is four assets and Draw/Sheathe two), and `KG_Combat.controller` with two locomotion
+blend trees and 17 isolated one-shot states. Both generated by `Tools ▸ DS2 ▸ Build Move Assets` and
+`Build Combat Animator`, which are re-runnable.
+
+**Step 1.2 — done 4 Sep.** `PlayerLocomotion.cs` (camera-relative movement, single-`Move` root-motion
+reconciliation, animator params) and `LockOnController.cs` (target acquisition, orbit-yaw framing,
+runtime target group). Verified in play: movement, running, lock-on with the camera behind her and
+the dummy ahead, lock breaking on range.
+
+**Next:** `build-plan.md` Step 1.3 — `CombatActor`, `Hitbox`, `Hurtbox`, `PlayerCombat`. This is where
+`RootMotionDriven` and `IsBusy` on `PlayerLocomotion` finally get set, and where the normalized
+hitbox windows on the move assets start being polled.

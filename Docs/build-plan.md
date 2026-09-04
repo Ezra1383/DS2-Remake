@@ -163,12 +163,26 @@ GUIDs — a genuine conflict.
 
 ### Step 1.2 — Locomotion and camera (Days 3–4)
 
-- Player root = the character prefab root itself (the Animator lives there; a separate parent just fights root motion). Add `CharacterController`, `PlayerLocomotion`, `PlayerCombat`, `CombatActor`.
-- **Root motion reconciliation is the day-3 trap.** Implement `OnAnimatorMove()`: when the current move has `useRootMotion`, feed `characterController.Move(animator.deltaPosition)`; otherwise apply scripted velocity. Get this working before you write a single attack.
-- Cinemachine: a `CinemachineCamera` with an Orbital follow on the player and a `CinemachineTargetGroup` (player + boss, weighted) for lock-on framing. Toggle lock-on by swapping the camera's LookAt between the group and a free-look target. Add `CinemachineImpulseSource` on the player now — you'll use it in week 3 and wiring it later means touching prefabs again.
-- Extend `InputSystem_Actions`: add `Dodge`, `LockOn`, `HeavyAttack`, `Stance`. Bind `Attack`/`Dodge` to the existing template actions where they already fit.
+**Done 4 Sep.** `PlayerLocomotion.cs` and `LockOnController.cs`, both on the `KatanaGirl` variant root.
 
-**Done when:** you can run around the arena, camera-locked onto a dummy, strafing correctly, feet not sliding.
+- Player root = the character prefab root itself (the Animator lives there; a separate parent just fights root motion).
+- **Root motion reconciliation — the day-3 trap, solved.** Every position write goes through a single `controller.Move()` in `OnAnimatorMove`, choosing between `animator.deltaPosition` and scripted velocity on a `RootMotionDriven` flag. Root motion and script can never both write position in one frame. `PlayerCombat` sets that flag per-move from `MoveDefinition.useRootMotion` in Step 1.3.
+- Walk/run speeds default to **1.55 / 4.8 m/s**, derived from the measured root displacement of the `Walk` and `Run` clips. These are the two dials for foot sliding.
+- Lock-on camera: `HorizontalAxis.Value` on `CinemachineOrbitalFollow` is driven each `Update` toward the yaw from player to target, easing with `SmoothDampAngle`. That places the camera on the line running from the enemy through the player and out behind her — the Dark Souls arrangement. A `CinemachineTargetGroup` (created at runtime) handles `LookAt` so both stay framed. Requires **Orbital Follow with Binding Mode = World Space**; `Awake` warns otherwise.
+- `InputSystem_Actions` extended with `Dodge` (Space / buttonEast), `LockOn` (Q / rightStickPress), `Stance` (R / buttonNorth). `Attack` already existed.
+
+**Correction to this step as originally written: lock-on strafing is not achievable.** The pack ships
+`Idle`, `Walk`, `Run` and nothing else — no strafe, no walk-back. Holding her facing at a target while
+she moves sideways plays a forward walk across a sideways translation, which reads as skating, and no
+blend tree fixes a clip that does not exist. **She therefore turns to face her direction of travel
+whether locked on or not**, and lock-on only owns her facing while she is standing still. Lock-on
+still frames the fight and still picks the target attacks commit toward.
+
+Sourcing strafe and walk-back clips is the only real fix and would let lock-on hold her facing as the
+design assumes. Tracked in *Known gaps*.
+
+**Done when:** you can run around the arena, camera locked onto a dummy, camera behind her with the
+dummy ahead, feet not sliding. *Met — mild residual slide on run, accepted for now.*
 
 ### Step 1.3 — Hitting things (Days 4–5)
 
@@ -303,6 +317,25 @@ No unit tests. In a 30-day solo action game the test harness is you, playing it,
 | ~~Speed multipliers make the specials look like fast-forward~~ | **Closed 4 Sep.** Measured: the whole table needed 2.3–3.9×. Retargeted to a global 2.0×, with the stun window and posture decay rescaled to match. |
 | Gameplay components land on a vendor asset | The player must be a Prefab Variant in `_Game/Prefabs/`. A pack reimport destroys components added to the vendor prefab. |
 | The fight now runs 45% slower than designed | Deliberate — the animations are heavy. Watch it in the day 13–14 playtest; if it drags, push individual moves toward 2.5× rather than rescaling globally again. |
+
+---
+
+## Known gaps
+
+**No strafe or walk-back animations.** The pack has `Idle`, `Walk`, `Run` only. Consequences:
+
+- Lock-on cannot hold her facing at the target while she moves; she turns to face travel instead.
+- Backing away from the boss plays a forward walk. Visible, and it matters because backing off is
+  a core defensive verb in a game with no block button.
+- Mild foot slide remains on the run cycle.
+
+Sourcing or authoring **Walk_Back, Strafe_L, Strafe_R** (and ideally the run equivalents) would close
+all three. That converts the locomotion tree from 1D on `Speed` to 2D on `MoveX`/`MoveY` — both
+parameters already exist in `KG_Combat` and are already written by `PlayerLocomotion`, so the change
+is confined to the blend tree plus deleting the facing special-case in `PlayerLocomotion.UpdateRotation`.
+
+Scheduled by the author for the weekend of 5–6 Sep. Not on the critical path: everything downstream
+works without it.
 | Feel work gets cut | Scheduled days 20–21, ahead of HUD and tuning. It is the product, not polish. |
 | ~~Toon shader fights URP 17~~ | **Closed 4 Sep.** One-line HLSL patch; see *Vendor modifications*. Re-opens on any pack reimport. |
 | Vendor patches lost to a reimport | Three unrecorded hand-edits documented above. Commit them; a reimport silently reverts all three. |
