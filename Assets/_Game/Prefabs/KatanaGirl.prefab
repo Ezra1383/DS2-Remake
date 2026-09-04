@@ -48,9 +48,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1608267275392491559, guid: 11352215bf7682b4b8e4423255e03e47, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: b80b86770d1f756479d06455203d180a, type: 2}
     - target: {fileID: 1914275313167630200, guid: 11352215bf7682b4b8e4423255e03e47, type: 3}
       propertyPath: m_Name
       value: KatanaGirl
+      objectReference: {fileID: 0}
+    - target: {fileID: 8060039325467171567, guid: 11352215bf7682b4b8e4423255e03e47, type: 3}
+      propertyPath: defaultEventSetting.monitoredLayers.Array.size
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2112878618255523209, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      propertyPath: defaultEventSetting.monitoredLayers.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2733031435217457843, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -52,6 +56,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: TrainingDummy
       objectReference: {fileID: 0}
+    - target: {fileID: 8290424638339614921, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: b80b86770d1f756479d06455203d180a, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

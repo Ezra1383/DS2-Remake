@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be08724df07c9a408da0daf3edcd834, type: 3}
+  m_Name: Move_Draw
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
+  moveId: 9
+  stateName: Take
+  speedMultiplier: 2.0388236
+  duration: 0.85
+  useRootMotion: 1
+  damage: 0
+  postureDamage: 0
+  hitboxOpen: 0
+  hitboxClose: 0
+  iframeStart: 0
+  iframeEnd: 0
+  cancelWindow: 1
+  nextInChain: {fileID: 0}

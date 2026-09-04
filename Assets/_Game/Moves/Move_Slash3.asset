@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be08724df07c9a408da0daf3edcd834, type: 3}
+  m_Name: Move_Slash3
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
+  moveId: 3
+  stateName: Attack3
+  speedMultiplier: 1.9713043
+  duration: 1.15
+  useRootMotion: 1
+  damage: 14
+  postureDamage: 25
+  hitboxOpen: 0.289
+  hitboxClose: 0.444
+  iframeStart: 0
+  iframeEnd: 0
+  cancelWindow: 1
+  nextInChain: {fileID: 0}
