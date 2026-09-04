@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 43923a31077d0024498b345fd1be457a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322644
+  packageName: CombatGirls_KatanaCharacterPack
+  packageVersion: 1.3.1
+  assetPath: Assets/CombatGirlsCharacterPack/Humanoid_Bot/Materials/Humanoid_Face.mat
+  uploadId: 976160

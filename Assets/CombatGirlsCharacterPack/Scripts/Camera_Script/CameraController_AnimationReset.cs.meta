@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 95c0204f90893de4ab0de0a2aa42821e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322644
+  packageName: CombatGirls_KatanaCharacterPack
+  packageVersion: 1.3.1
+  assetPath: Assets/CombatGirlsCharacterPack/Scripts/Camera_Script/CameraController_AnimationReset.cs
+  uploadId: 976160

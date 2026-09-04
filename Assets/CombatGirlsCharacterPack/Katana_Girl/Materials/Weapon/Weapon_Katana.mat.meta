@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: faf1002614fbce1468b10b7fcd8b2ddb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322644
+  packageName: CombatGirls_KatanaCharacterPack
+  packageVersion: 1.3.1
+  assetPath: Assets/CombatGirlsCharacterPack/Katana_Girl/Materials/Weapon/Weapon_Katana.mat
+  uploadId: 976160

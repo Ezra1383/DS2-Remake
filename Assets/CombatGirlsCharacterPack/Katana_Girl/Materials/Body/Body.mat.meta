@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b44066dffa66cf44f9957762064045c7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322644
+  packageName: CombatGirls_KatanaCharacterPack
+  packageVersion: 1.3.1
+  assetPath: Assets/CombatGirlsCharacterPack/Katana_Girl/Materials/Body/Body.mat
+  uploadId: 976160

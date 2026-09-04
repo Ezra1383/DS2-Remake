@@ -1,0 +1,27 @@
+{
+  "displayName": "Film Internal Utilities",
+  "name": "com.unity.film-internal-utilities",
+  "unity": "6000.0",
+  "version": "0.20.0-preview",
+  "description": "A package containing internal utility functions to support the development of film packages/modules for Unity",
+  "dependencies": {
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.timeline": "1.2.18"
+  },
+  "contributors": [
+    "Sindharta Tanuwijaya <sindharta.tanuwijaya@unity3d.com> (https://github.com/sindharta)"
+  ],
+  "_upm": {
+    "changelog": "### Changed\n\n* internal: open Editor Assembly to ToonShader package\n* internal: add PackageUtility API\n* package: update minimum version to 6000.0"
+  },
+  "upmCi": {
+    "footprint": "e920dbce1189ba0b328a9664309f6ab0b4ca08f6"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.film-internal-utilities@0.20/manual/index.html",
+  "repository": {
+    "url": "https://github.com/Unity-Technologies/AnimeSolution.git",
+    "type": "git",
+    "revision": "974a5c9357d63649c452c648223bc890965ecadd"
+  }
+}

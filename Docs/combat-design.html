@@ -1,0 +1,895 @@
+<title>Ten Deaths to the Mirror</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper:      #E9E7E2;
+    --surface:    #F3F1ED;
+    --surface-2:  #DFDCD5;
+    --ink:        #14161A;
+    --ink-soft:   #3F444C;
+    --steel:      #737B85;
+    --steel-faint:#B4B8BE;
+    --rule:       #CFCCC5;
+    --indigo:     #33487E;
+    --indigo-dim: #33487E22;
+    --posture:    #B06A33;
+    --blood:      #97383A;
+    --jade:       #3F7059;
+
+    --font-display: "Shippori Mincho", "Hiragino Mincho ProN", Georgia, serif;
+    --font-body: "Archivo", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-data: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+    --measure: 68ch;
+    --wide: 1040px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #101216;
+      --surface:    #181B21;
+      --surface-2:  #21252D;
+      --ink:        #DEDCD7;
+      --ink-soft:   #A8ACB3;
+      --steel:      #858C96;
+      --steel-faint:#4A505A;
+      --rule:       #2B2F37;
+      --indigo:     #8CA2DA;
+      --indigo-dim: #8CA2DA1F;
+      --posture:    #D9954F;
+      --blood:      #C96A6C;
+      --jade:       #6BA98A;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #101216;
+    --surface:    #181B21;
+    --surface-2:  #21252D;
+    --ink:        #DEDCD7;
+    --ink-soft:   #A8ACB3;
+    --steel:      #858C96;
+    --steel-faint:#4A505A;
+    --rule:       #2B2F37;
+    --indigo:     #8CA2DA;
+    --indigo-dim: #8CA2DA1F;
+    --posture:    #D9954F;
+    --blood:      #C96A6C;
+    --jade:       #6BA98A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+
+  .col {
+    max-width: var(--measure);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 76px 0 40px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 44px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-data);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(38px, 6.2vw, 62px);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0 0 22px;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 18.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0 0 30px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 40px;
+    font-family: var(--font-data);
+    font-size: 12.5px;
+    color: var(--steel);
+  }
+  .meta-row div { display: flex; gap: 8px; }
+  .meta-row b {
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { margin-bottom: 68px; }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .sec-head {
+    border-top: 2px solid var(--ink);
+    padding-top: 14px;
+    margin-bottom: 26px;
+  }
+  .sec-head .eyebrow { margin-bottom: 12px; }
+  .sec-head p {
+    color: var(--ink-soft);
+    margin: 8px 0 0;
+    max-width: var(--measure);
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    margin: 34px 0 10px;
+  }
+
+  p { margin: 0 0 16px; }
+  .col p:last-child { margin-bottom: 0; }
+
+  a { color: var(--indigo); }
+
+  code, .clip {
+    font-family: var(--font-data);
+    font-size: 0.875em;
+    background: var(--indigo-dim);
+    color: var(--indigo);
+    padding: 1.5px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  strong { font-weight: 600; }
+
+  ul.plain {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+    max-width: var(--measure);
+  }
+  ul.plain li {
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 9px;
+  }
+  ul.plain li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.66em;
+    width: 7px;
+    height: 1.5px;
+    background: var(--steel);
+  }
+
+  /* ---------- the constraint callout ---------- */
+
+  .constraint {
+    border-left: 3px solid var(--blood);
+    padding: 2px 0 2px 22px;
+    margin: 0 0 26px;
+    max-width: var(--measure);
+  }
+  .constraint p:last-child { margin-bottom: 0; }
+  .constraint .lede {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+
+  /* ---------- frame data table ---------- */
+
+  .scroller {
+    overflow-x: auto;
+    margin-bottom: 14px;
+    padding-bottom: 4px;
+  }
+
+  table.frames {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  table.frames th {
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-align: left;
+    padding: 0 12px 9px 0;
+    border-bottom: 1px solid var(--ink);
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+  table.frames th.num, table.frames td.num { text-align: right; }
+
+  table.frames td {
+    padding: 11px 12px 11px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+  }
+
+  table.frames tr.group-head td {
+    border-bottom: none;
+    padding: 26px 0 6px;
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    font-weight: 600;
+  }
+  table.frames tr:first-child.group-head td { padding-top: 14px; }
+
+  .mv-name { font-weight: 600; white-space: nowrap; }
+  .mv-clip {
+    font-family: var(--font-data);
+    font-size: 11.5px;
+    color: var(--steel);
+    white-space: nowrap;
+  }
+  .num {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .dash { color: var(--steel-faint); }
+
+  /* timing bar — the fighting-game frame chart */
+  .bar {
+    display: flex;
+    height: 13px;
+    width: 260px;
+    background: linear-gradient(to right, var(--rule) 0 1px, transparent 1px) repeat-x;
+    background-size: 17.33px 100%;
+  }
+  .bar span { display: block; height: 100%; }
+  .seg-start { background: var(--steel-faint); }
+  .seg-hit   { background: var(--blood); }
+  .seg-inv   { background: var(--jade); }
+  .seg-rec   { background: var(--steel-faint); opacity: 0.42; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-family: var(--font-data);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--steel);
+    margin-bottom: 26px;
+  }
+  .legend div { display: flex; align-items: center; gap: 7px; }
+  .legend i {
+    width: 16px; height: 9px;
+    display: block;
+    font-style: normal;
+  }
+  .k-start { background: var(--steel-faint); }
+  .k-hit   { background: var(--blood); }
+  .k-inv   { background: var(--jade); }
+  .k-rec   { background: var(--steel-faint); opacity: 0.42; }
+
+  /* ---------- unlock ladder ---------- */
+
+  .ladder {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 20px;
+  }
+  .rung {
+    background: var(--surface);
+    padding: 13px 15px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rung.start { background: var(--surface-2); }
+  .rung-n {
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--steel);
+    font-variant-numeric: tabular-nums;
+  }
+  .rung.start .rung-n { color: var(--jade); }
+  .rung-name { font-weight: 600; font-size: 14px; line-height: 1.3; }
+  .rung-why { font-size: 12.5px; color: var(--ink-soft); line-height: 1.42; }
+
+  /* ---------- number strip ---------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 26px 34px;
+    padding: 22px 0 4px;
+    border-top: 1px solid var(--rule);
+    margin-bottom: 8px;
+  }
+  .stat-k {
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin-bottom: 5px;
+  }
+  .stat-v {
+    font-family: var(--font-display);
+    font-size: 29px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 4px;
+  }
+  .stat-n { font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; }
+
+  /* ---------- schedule ---------- */
+
+  .week {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 0 28px;
+    border-top: 1px solid var(--rule);
+    padding: 20px 0 22px;
+  }
+  .week:last-of-type { border-bottom: 1px solid var(--rule); }
+  .week-when { padding-top: 2px; }
+  .week-n {
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .week-dates {
+    font-family: var(--font-data);
+    font-size: 12.5px;
+    color: var(--steel);
+    font-variant-numeric: tabular-nums;
+  }
+  .week-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    line-height: 1.3;
+  }
+  .days { margin: 0 0 14px; }
+  .day {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    gap: 14px;
+    font-size: 14px;
+    padding: 3px 0;
+  }
+  .day-n {
+    font-family: var(--font-data);
+    font-size: 12px;
+    color: var(--steel);
+    font-variant-numeric: tabular-nums;
+    padding-top: 2px;
+  }
+  .milestone {
+    background: var(--indigo-dim);
+    border-left: 2px solid var(--indigo);
+    padding: 9px 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .milestone b {
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  /* ---------- scripts list ---------- */
+
+  .files {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+    gap: 18px 30px;
+    margin-bottom: 8px;
+  }
+  .file-n {
+    font-family: var(--font-data);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .file-d { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+
+  /* ---------- risks ---------- */
+
+  .risk {
+    border-top: 1px solid var(--rule);
+    padding: 15px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 30px;
+  }
+  .risk:last-child { border-bottom: 1px solid var(--rule); }
+  .risk-t { font-weight: 600; font-size: 14.5px; }
+  .risk-m { font-size: 13.5px; color: var(--ink-soft); }
+  .risk-m em {
+    font-style: normal;
+    font-family: var(--font-data);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--posture);
+    display: block;
+    margin-bottom: 1px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 700px) {
+    .week, .risk, .day { grid-template-columns: 1fr; gap: 6px; }
+    .masthead { padding-top: 52px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">DS2 Remake · Combat Design &amp; Build Plan</p>
+    <h1>Ten Deaths to the Mirror</h1>
+    <p class="standfirst">One arena, one boss, no second enemy. You are the Katana Girl with a single attack. She is the Katana Girl with everything. Each death teaches you the move that killed you — until the mirror is even.</p>
+    <div class="meta-row">
+      <div>Start <b>3 Sep 2026</b></div>
+      <div>Ship <b>3 Oct 2026</b></div>
+      <div>Working days <b>30</b></div>
+      <div>Unity <b>URP</b></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">The constraint that shapes everything</p>
+      <h2>There is no block animation</h2>
+    </div>
+    <div class="constraint">
+      <p class="lede">The Katana Girl rig ships with 6 attacks, 5 evasive moves, 2 hit reactions, a stun and a death. It has no guard, no parry, no shield.</p>
+      <p>This is the single most important fact in the project, and it is good news. A souls-like with no block button cannot be a shield-turtle game — it has to be built on spacing, commitment and reads, closer to Bloodborne than to Dark Souls. Every defensive decision the player makes must come out of five movement clips, which means those five clips have to carry real weight and feel meaningfully different from one another.</p>
+    </div>
+    <div class="col">
+      <p>The second constraint follows from the first: <strong>six attack animations is a small pool.</strong> The fight cannot be made engaging through move quantity. It has to come from frame data, from a boss that reads and punishes, and from the way each unlock re-frames the moves you already had. In a one-boss game that is the right place for the fun to live anyway.</p>
+      <p>The existing <span class="clip">School_Katana_Controller</span> is a flat 38-state demo controller with one trigger per clip, built for the asset pack's button-viewer. It is not salvageable for gameplay. We author a new controller and leave the demo one untouched for reference.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Core loop</p>
+      <h2>Fight, die, learn, retry — in under two seconds</h2>
+      <p>Death is the progression mechanic, so death must be cheap. From killing blow to next attempt: one death animation, one unlock card, one input. No menus, no loading, no walk back to the fog gate.</p>
+    </div>
+    <div class="col">
+      <h3>Starting kit is two moves, not one</h3>
+      <p>The premise says you begin knowing one attack. You also begin knowing how to dodge. With no player stamina and no block, evasion is the only defensive verb in the game — a player without it has no interaction beyond swinging, and the first fight becomes a cutscene. <span class="clip">K_Attack_1</span> plus <span class="clip">K_Evade</span> is still the absolute minimum souls grammar: threaten, evade, punish. Everything else is earned.</p>
+
+      <h3>Two dodges that feel different</h3>
+      <p>With a pool this small, the distinction between <strong>Evade</strong> and <strong>Quick Shift</strong> carries a disproportionate share of the depth. Evade is the generous, forgiving roll — long invulnerability, slow recovery, gets you out of trouble but gives up your position. Quick Shift is tight, directional and less invulnerable, but recovers fast enough to keep you inside her range. Learning when to trade the safe roll for the aggressive dash <em>is</em> the skill curve of this game.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Move data · targets, not measurements</p>
+      <h2>Frame data</h2>
+      <p>Measure the real clip lengths on day one, then hit these targets with a per-move animator speed multiplier stored on the move asset. Times in seconds; the chart is drawn to a common 1.5s scale so durations compare across rows.</p>
+    </div>
+
+    <div class="legend">
+      <div><i class="k-start"></i> Startup</div>
+      <div><i class="k-hit"></i> Hitbox active</div>
+      <div><i class="k-inv"></i> Invulnerable</div>
+      <div><i class="k-rec"></i> Recovery</div>
+      <div>· each gridline = 0.1s</div>
+    </div>
+
+    <div class="scroller">
+      <table class="frames">
+        <thead>
+          <tr>
+            <th style="width:150px">Move</th>
+            <th style="width:150px">Clip</th>
+            <th style="width:276px">Timing</th>
+            <th class="num">Total</th>
+            <th class="num">Dmg</th>
+            <th class="num">Posture</th>
+            <th>Cancels into</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group-head"><td colspan="7">Normal stance</td></tr>
+          <tr>
+            <td class="mv-name">Slash 1</td>
+            <td class="mv-clip">K_Attack_1</td>
+            <td><div class="bar"><span class="seg-start" style="width:12%"></span><span class="seg-hit" style="width:6.7%"></span><span class="seg-rec" style="width:21.3%"></span></div></td>
+            <td class="num">0.60</td><td class="num">8</td><td class="num">12</td>
+            <td style="font-size:12.5px">Slash 2 @ 0.28</td>
+          </tr>
+          <tr>
+            <td class="mv-name">Slash 2</td>
+            <td class="mv-clip">K_Attack_2</td>
+            <td><div class="bar"><span class="seg-start" style="width:10.7%"></span><span class="seg-hit" style="width:6.7%"></span><span class="seg-rec" style="width:24%"></span></div></td>
+            <td class="num">0.62</td><td class="num">10</td><td class="num">15</td>
+            <td style="font-size:12.5px">Slash 3 @ 0.30</td>
+          </tr>
+          <tr>
+            <td class="mv-name">Slash 3</td>
+            <td class="mv-clip">K_Attack_3</td>
+            <td><div class="bar"><span class="seg-start" style="width:17.3%"></span><span class="seg-hit" style="width:9.3%"></span><span class="seg-rec" style="width:33.3%"></span></div></td>
+            <td class="num">0.90</td><td class="num">14</td><td class="num">25</td>
+            <td class="dash">—</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="7">Evasion</td></tr>
+          <tr>
+            <td class="mv-name">Evade</td>
+            <td class="mv-clip">K_Evade</td>
+            <td><div class="bar"><span class="seg-start" style="width:3.3%"></span><span class="seg-inv" style="width:22%"></span><span class="seg-rec" style="width:14.7%"></span></div></td>
+            <td class="num">0.60</td><td class="dash">—</td><td class="dash">—</td>
+            <td style="font-size:12.5px">Attack @ 0.42</td>
+          </tr>
+          <tr>
+            <td class="mv-name">Quick Shift</td>
+            <td class="mv-clip">K_QuickShift_F/B/L/R</td>
+            <td><div class="bar"><span class="seg-start" style="width:2.7%"></span><span class="seg-inv" style="width:13.3%"></span><span class="seg-rec" style="width:13.3%"></span></div></td>
+            <td class="num">0.44</td><td class="dash">—</td><td class="dash">—</td>
+            <td style="font-size:12.5px">Attack @ 0.28</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="7">Stance</td></tr>
+          <tr>
+            <td class="mv-name">Draw / Sheathe</td>
+            <td class="mv-clip">K_Take / K_Put</td>
+            <td><div class="bar"><span class="seg-start" style="width:30%"></span></div></td>
+            <td class="num">0.45</td><td class="dash">—</td><td class="dash">—</td>
+            <td style="font-size:12.5px">Vulnerable throughout</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="7">Special stance</td></tr>
+          <tr>
+            <td class="mv-name">Skill 1</td>
+            <td class="mv-clip">K_Sp_Skill_1</td>
+            <td><div class="bar"><span class="seg-start" style="width:20%"></span><span class="seg-hit" style="width:8%"></span><span class="seg-rec" style="width:36.7%"></span></div></td>
+            <td class="num">0.97</td><td class="num">18</td><td class="num">30</td>
+            <td class="dash">—</td>
+          </tr>
+          <tr>
+            <td class="mv-name">Skill 2</td>
+            <td class="mv-clip">K_Sp_Skill_2</td>
+            <td><div class="bar"><span class="seg-start" style="width:25.3%"></span><span class="seg-hit" style="width:12%"></span><span class="seg-rec" style="width:40%"></span></div></td>
+            <td class="num">1.16</td><td class="num">22</td><td class="num">34</td>
+            <td class="dash">—</td>
+          </tr>
+          <tr>
+            <td class="mv-name">Skill 3</td>
+            <td class="mv-clip">K_Sp_Skill_3</td>
+            <td><div class="bar"><span class="seg-start" style="width:33.3%"></span><span class="seg-hit" style="width:13.3%"></span><span class="seg-rec" style="width:50%"></span></div></td>
+            <td class="num">1.45</td><td class="num">28</td><td class="num">40</td>
+            <td class="dash">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p>The shape of the table is the design. Normal-stance slashes are cheap, chainable and low-commitment — you can throw Slash 1 and still dodge her answer. The full three-hit chain does <strong>32 damage and 52 posture</strong> but locks you for 2.1 seconds, which is long enough for her to punish if you started it at the wrong time. Special skills trade all of your safety for posture damage: Skill 3 has half a second of startup, which she will read and walk out of unless you have already earned the opening.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Defensive economy</p>
+      <h2>No stamina. She has posture instead.</h2>
+      <p>The player is limited by animation commitment, not by a bar. The pressure runs the other way — onto her.</p>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-k">Boss health</div>
+        <div class="stat-v">400</div>
+        <div class="stat-n">≈ 3 posture-break cycles</div>
+      </div>
+      <div>
+        <div class="stat-k">Boss posture</div>
+        <div class="stat-v">100</div>
+        <div class="stat-n">Two full slash chains</div>
+      </div>
+      <div>
+        <div class="stat-k">Posture decay</div>
+        <div class="stat-v">8<span style="font-size:15px">/s</span></div>
+        <div class="stat-n">Begins 1.5s after last hit</div>
+      </div>
+      <div>
+        <div class="stat-k">Stun window</div>
+        <div class="stat-v">2.5<span style="font-size:15px">s</span></div>
+        <div class="stat-n">K_Stun · damage taken ×2</div>
+      </div>
+      <div>
+        <div class="stat-k">Player health</div>
+        <div class="stat-v">100</div>
+        <div class="stat-n">Three to five of her hits</div>
+      </div>
+      <div>
+        <div class="stat-k">Target fight length</div>
+        <div class="stat-v">2–4<span style="font-size:15px">min</span></div>
+        <div class="stat-n">On a winning attempt</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>Because posture decays, chip damage from a safe poke-and-retreat game goes nowhere — the meter drains faster than you can fill it at that pace. The only way to break her is sustained pressure, which means <strong>aggression is the correct defense</strong>, and the player discovers that themselves rather than being told. When the meter fills she drops into <span class="clip">K_Stun</span> for 2.5 seconds and takes double damage: exactly long enough for one full three-slash chain, which is why the chain exists.</p>
+      <p>The player has no posture meter and no stamina. What stops them mashing attack is recovery frames and a boss that punishes whiffs.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Progression · learn what killed you</p>
+      <h2>The unlock ladder</h2>
+      <p>The move that lands the killing blow is the move you learn. When she kills you with something you already know, resolution walks this ladder to the first thing you don't.</p>
+    </div>
+
+    <div class="ladder">
+      <div class="rung start"><div class="rung-n">START</div><div class="rung-name">Slash 1</div><div class="rung-why">The one attack you begin with.</div></div>
+      <div class="rung start"><div class="rung-n">START</div><div class="rung-name">Evade</div><div class="rung-why">Your only defense. Non-negotiable.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 01</div><div class="rung-name">Slash 2</div><div class="rung-why">Turns one swing into a decision about whether to continue.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 02</div><div class="rung-name">Quick Shift B</div><div class="rung-why">Backdash. Your first tool for making space on purpose.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 03</div><div class="rung-name">Slash 3</div><div class="rung-why">The finisher. 25 posture. Now breaking her is possible.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 04</div><div class="rung-name">Quick Shift F</div><div class="rung-why">Gap closer. Punishing her recovery from across the arena.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 05</div><div class="rung-name">The Draw</div><div class="rung-why">Access to Special stance. The fight's midpoint turn.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 06</div><div class="rung-name">Skill 1</div><div class="rung-why">First heavy. 30 posture in one committed swing.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 07</div><div class="rung-name">Quick Shift L</div><div class="rung-why">Lateral movement. Circling becomes an option.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 08</div><div class="rung-name">Skill 2</div><div class="rung-why">Her signature lunge, now yours.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 09</div><div class="rung-name">Quick Shift R</div><div class="rung-why">Completes the four-way dash.</div></div>
+      <div class="rung"><div class="rung-n">DEATH 10</div><div class="rung-name">Skill 3</div><div class="rung-why">The last thing she has. The mirror is even.</div></div>
+    </div>
+
+    <div class="col">
+      <h3>Resolution rules</h3>
+      <ul class="plain">
+        <li>Record the damage source on every hit; on death, the killing move is the candidate.</li>
+        <li>Map it 1:1 to its player equivalent — it is a mirror match, so every boss move has one.</li>
+        <li>If that move is already unlocked, walk the ladder above and grant the first locked entry instead.</li>
+        <li>If the candidate is a Special skill and the Draw is still locked, <strong>grant the Draw instead</strong>. You cannot learn a technique you cannot take the stance for. Narratively: you learned to draw the blade.</li>
+        <li><strong>Every death grants exactly one unlock</strong> until the pool is empty. A player must never walk away from a death with nothing.</li>
+      </ul>
+      <p>Because she is static and uses her whole moveset from the start, unlock order will vary between players — someone who keeps dying to her lunge learns different things, in a different order, than someone who keeps getting caught by the three-hit chain. The ladder exists to guarantee coherence, not to override the premise.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Opponent</p>
+      <h2>She never changes. You do.</h2>
+      <p>Fixed behaviour, full moveset, from the first attempt to the last. The entire difficulty curve is the player's growing toolkit and the player's growing skill.</p>
+    </div>
+    <div class="col">
+      <h3>Selection by range, not by script</h3>
+      <ul class="plain">
+        <li><strong>Close, under 2.5m</strong> — normal-stance slash chains, highest frequency. This is where most of the fight happens.</li>
+        <li><strong>Mid, 2.5–5m</strong> — Quick Shift F to close the gap, or Skill 2 as a committed lunge that covers the distance.</li>
+        <li><strong>Far, over 5m</strong> — runs in, or holds Special stance and walks, baiting you into approaching first.</li>
+      </ul>
+
+      <h3>The three rules that make her fair</h3>
+      <ul class="plain">
+        <li><strong>Maximum three attacks, then a mandatory 0.8s neutral gap.</strong> Without a guaranteed opening, a fight with no block button reads as unfair no matter how good the player is. This is the most important line of AI code in the project.</li>
+        <li><strong>Every attack telegraphs.</strong> We cannot author new animation, so tells come from elsewhere: a brief animator speed dip before the swing, a weapon trail that colours in during startup, and a distinct sound per move. The telegraph is what converts a death from unfair to instructive — and since deaths are the progression system here, they have to read as instructive.</li>
+        <li><strong>She punishes whiffs, but not always.</strong> On player recovery, roughly a 30% chance to immediately punish. Always punishing is oppressive; never punishing means the player can mash. The uncertainty is what makes her feel like an opponent.</li>
+      </ul>
+      <p>She also needs a patience timer — if the player retreats and circles without committing, she closes the distance rather than waiting. A boss you can stall is a boss you can solve boringly.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Architecture</p>
+      <h2>Twelve scripts and one new controller</h2>
+      <p>Move definitions are ScriptableObjects because tuning is where the fun gets made, and you will do it a hundred times. Everything else stays lean.</p>
+    </div>
+
+    <div class="files">
+      <div><div class="file-n">MoveDefinition.cs</div><div class="file-d">ScriptableObject. Trigger name, speed multiplier, damage, posture damage, hitbox open/close times, cancel window, i-frame window, root-motion flag.</div></div>
+      <div><div class="file-n">CombatActor.cs</div><div class="file-d">Shared base for player and boss. Health, current move, state gating, hit routing, death.</div></div>
+      <div><div class="file-n">PostureSystem.cs</div><div class="file-d">Boss-only. Accumulation, decay timer, break into stun, damage multiplier while stunned.</div></div>
+      <div><div class="file-n">PlayerLocomotion.cs</div><div class="file-d">CharacterController movement, lock-on strafing, animator speed parameter.</div></div>
+      <div><div class="file-n">PlayerCombat.cs</div><div class="file-d">Input to move execution, chain buffering, cancel windows, i-frame application.</div></div>
+      <div><div class="file-n">BossAI.cs</div><div class="file-d">Range bands, weighted move selection, combo counter, mandatory gap, whiff punish, patience timer.</div></div>
+      <div><div class="file-n">Hitbox.cs / Hurtbox.cs</div><div class="file-d">Weapon-mounted trigger collider, enabled by animation event. One hit per swing per target.</div></div>
+      <div><div class="file-n">AnimationEventRelay.cs</div><div class="file-d">Bridges animation events on the model to components on the root.</div></div>
+      <div><div class="file-n">HitReaction.cs</div><div class="file-d">Picks K_Hit_L or K_Hit_R from the angle between hit direction and forward. Free polish.</div></div>
+      <div><div class="file-n">ProgressionManager.cs</div><div class="file-d">Persists unlocks, records the killing move, runs the resolution rules, survives scene reload.</div></div>
+      <div><div class="file-n">LockOnCamera.cs</div><div class="file-d">Replaces the demo free-fly camera entirely. Target framing, soft follow, break distance.</div></div>
+      <div><div class="file-n">HitFeedback.cs</div><div class="file-d">Hitstop, camera shake, impact VFX, sound. Small file, disproportionate effect.</div></div>
+    </div>
+
+    <div class="col">
+      <h3>Decide root motion on day one</h3>
+      <p>Root motion <strong>on</strong> for attacks and dodges — the clips were authored with displacement and stripping it makes every swing feel weightless. Root motion <strong>off</strong> for locomotion, where scripted movement is more responsive. Drive it per-state from a flag on the move asset. Getting this wrong and discovering it in week three is the classic way this kind of project loses a week.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Schedule · 3 September – 3 October 2026</p>
+      <h2>Four weeks and a three-day buffer</h2>
+    </div>
+
+    <div class="week">
+      <div class="week-when">
+        <div class="week-n">Week 1</div>
+        <div class="week-dates">3 – 9 Sep</div>
+      </div>
+      <div>
+        <div class="week-title">Make one sword hit one thing</div>
+        <div class="days">
+          <div class="day"><div class="day-n">Day 1</div><div>Measure every clip length. Author move assets. Decide root motion. New animator controller skeleton.</div></div>
+          <div class="day"><div class="day-n">Day 2–3</div><div>Player locomotion, lock-on camera, blend-tree movement.</div></div>
+          <div class="day"><div class="day-n">Day 4–5</div><div>Attack execution, animation-event hitboxes, hurtboxes, damage application.</div></div>
+          <div class="day"><div class="day-n">Day 6–7</div><div>Hit reactions with L/R selection, evade with i-frames, death state.</div></div>
+        </div>
+        <div class="milestone"><b>Milestone</b>You can walk up to a training dummy, hit it, watch it flinch in the right direction, and kill it.</div>
+      </div>
+    </div>
+
+    <div class="week">
+      <div class="week-when">
+        <div class="week-n">Week 2</div>
+        <div class="week-dates">10 – 16 Sep</div>
+      </div>
+      <div>
+        <div class="week-title">Make it a fight</div>
+        <div class="days">
+          <div class="day"><div class="day-n">Day 8–9</div><div>Posture system, decay, break, stun state, doubled damage window.</div></div>
+          <div class="day"><div class="day-n">Day 10–12</div><div>Boss AI: range bands, weighted selection, cooldowns, the mandatory neutral gap.</div></div>
+          <div class="day"><div class="day-n">Day 13–14</div><div>Telegraphs, whiff punishing, patience timer. First real playtest.</div></div>
+        </div>
+        <div class="milestone"><b>Milestone</b>A fight you can genuinely lose, and — with the full moveset enabled for testing — genuinely win.</div>
+      </div>
+    </div>
+
+    <div class="week">
+      <div class="week-when">
+        <div class="week-n">Week 3</div>
+        <div class="week-dates">17 – 23 Sep</div>
+      </div>
+      <div>
+        <div class="week-title">The loop, and the feel</div>
+        <div class="days">
+          <div class="day"><div class="day-n">Day 15–16</div><div>Killing-move tracking, ProgressionManager, resolution rules, persistence.</div></div>
+          <div class="day"><div class="day-n">Day 17</div><div>Death screen, unlock card, sub-two-second retry.</div></div>
+          <div class="day"><div class="day-n">Day 18–19</div><div>Stance switching via Draw/Sheathe, the three Special skills.</div></div>
+          <div class="day"><div class="day-n">Day 20–21</div><div>Juice pass: hitstop, camera shake, impact VFX, sound, weapon trails.</div></div>
+        </div>
+        <div class="milestone"><b>Milestone</b>The complete death-to-unlock-to-retry loop, and it feels good to hit her. Days 20–21 are not polish — they are the product.</div>
+      </div>
+    </div>
+
+    <div class="week">
+      <div class="week-when">
+        <div class="week-n">Week 4</div>
+        <div class="week-dates">24 – 30 Sep</div>
+      </div>
+      <div>
+        <div class="week-title">Tune until it's fair</div>
+        <div class="days">
+          <div class="day"><div class="day-n">Day 22–24</div><div>Balance the full ten-death arc. Play it start to finish repeatedly. Adjust frame data.</div></div>
+          <div class="day"><div class="day-n">Day 25–26</div><div>HUD: health, posture, learned moves. Audio pass.</div></div>
+          <div class="day"><div class="day-n">Day 27–28</div><div>Edge cases: death during stun, unlock during animation, camera on target loss.</div></div>
+          <div class="day"><div class="day-n">Day 29–30</div><div>Build, test the build, write-up.</div></div>
+        </div>
+        <div class="milestone"><b>Milestone</b>Submission build, with 1–3 Oct held in reserve.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Risk register</p>
+      <h2>What actually kills this project</h2>
+    </div>
+
+    <div class="risk">
+      <div class="risk-t">Boss AI eats the schedule</div>
+      <div class="risk-m"><em>Mitigation</em>Hard three-day budget. Weighted random over range bands with cooldowns — no behaviour tree library, no utility AI framework. A simple opponent with good telegraphs beats a sophisticated one that arrives on day 25.</div>
+    </div>
+    <div class="risk">
+      <div class="risk-t">Clip timings don't match the targets</div>
+      <div class="risk-m"><em>Mitigation</em>Per-move animator speed multiplier on the move asset, measured and set on day 1. Assume every number in the frame data table is wrong until you have played it.</div>
+    </div>
+    <div class="risk">
+      <div class="risk-t">Game feel gets cut when time runs out</div>
+      <div class="risk-m"><em>Mitigation</em>It is scheduled in week 3, ahead of tuning and HUD, deliberately. In a game this small, hitstop and sound do more for "is it fun" than any system on this page.</div>
+    </div>
+    <div class="risk">
+      <div class="risk-t">The demo scripts fight the new ones</div>
+      <div class="risk-m"><em>Mitigation</em>Leave the asset pack's viewer scene and controller entirely alone; build gameplay in new folders. The viewer stays useful for previewing clips.</div>
+    </div>
+    <div class="risk">
+      <div class="risk-t">The arc is too short or too long</div>
+      <div class="risk-m"><em>Mitigation</em>Ten unlocks assumes roughly one death per unlock, but a struggling player may die thirty times. Tune boss damage first — it is the fastest lever on arc length.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Held back</p>
+      <h2>Deliberately not in scope</h2>
+    </div>
+    <div class="col">
+      <ul class="plain">
+        <li><strong>Map design and level art</strong> — one flat arena with a boundary. Explicitly deferred.</li>
+        <li><strong>Healing items</strong> — no estus. Fights stay short, retries stay cheap, and the loop stays tight. Revisit only if playtests say the fight is too punishing to learn from.</li>
+        <li><strong>The Humanoid_Bot character</strong> — useful as a training dummy in week 1, not a second enemy.</li>
+        <li><strong>Crouch animations</strong> — <span class="clip">K_Crouch_*</span> has no combat role here. Leave it.</li>
+        <li><strong>Emotion clips</strong> — the seven <span class="clip">CBG_*</span> expressions are for cutscenes we are not making. Possible use on the victory beat, day 29 if time allows.</li>
+        <li><strong>A second phase</strong> — she is static by design. If tuning shows the late arc goes slack, an HP-gated shift into Special stance is the cheapest fix available, and the animation set already supports it.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ded563020797e994393627f10c3aa539
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322644
+  packageName: CombatGirls_KatanaCharacterPack
+  packageVersion: 1.3.1
+  assetPath: Assets/CombatGirlsCharacterPack/Biperworks_Tools/Editor/PrefabReplace/BiperworksRebinder.cs
+  uploadId: 976160
