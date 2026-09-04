@@ -25,7 +25,7 @@ Findings from reading the actual assets, and the decisions that follow. These su
 | **Every clip has baked `SwitchSocket` animation events** consumed by `Character_Weapon_Controller` on the prefab root. | That component is mandatory on player and boss. It swaps the katana between hand and back via ParentConstraint source-switching, not reparenting — so a hitbox parented to the katana object follows correctly. `Dummy_Event.cs` exists to swallow the events on anything that shouldn't react. |
 | All clips are **Humanoid** (`animationType: 3`), root XZ displacement preserved (`keepOriginalPositionY: 1`, no XZ bake). | The doc's "root motion on for attacks and dodges" is correct and free. Retargeting to the bot body also works. |
 | Clip names **inside** the FBXs are `Attack1`, `Evade`, `Quickshift_F`, `Sp_Skill3` — not the `K_Attack_1` filenames the doc uses. | `MoveDefinition` must reference **animator state names**, not clip names or triggers. See the architecture change below. |
-| Clip lengths are wildly uneven: `Attack1` = 61 frames, `Sp_Skill3` = **270 frames** against a 1.45 s target. | The speed multiplier is doing extreme work on the specials. Measure before you trust any number in the frame-data table. |
+| **Measured 4 Sep: every move is 2.3×–3.9× slower than the design assumed.** Not one outlier — the whole table. | The frame data in `combat-design.html` is superseded. See *Measured frame data* below. |
 | `Humanoid_F_Katana.prefab` is a light (364-line) bot body already holding the katana, with `Character_Weapon_Controller`, no Magica dependency, no toon-shader dependency, same humanoid avatar. | **This is the week-1 training dummy and the early boss stand-in.** Swap in the real girl once feel is proven. |
 | No Cinemachine in the manifest. | Install Cinemachine 3 (decided). Replaces hand-written `LockOnCamera` and gives Impulse for the week-3 shake pass. |
 | `activeInputHandler: 1` — new Input System only. `Assets/InputSystem_Actions.inputactions` is the Unity 6 template (Player map: Move, Look, Attack, Sprint, Jump, Crouch, Interact). | Extend that asset; don't author a second one. |
@@ -37,6 +37,60 @@ The doc puts hitbox open/close on animation events. **Don't.** Events are baked 
 Instead: `MoveDefinition` stores hitbox open/close as **normalized time**, and `CombatActor` polls `stateInfo.normalizedTime` each frame to open and close the window. Retuning a hitbox becomes editing a float on a ScriptableObject with the game running. This directly defuses the doc's own "clip timings don't match the targets" risk, and it means `AnimationEventRelay.cs` is only needed if you later want VFX events.
 
 Same reasoning for the animator: **no trigger-per-move.** The demo `School_Katana_Controller` has 38 states and one trigger each; that pattern does not scale to data-driven moves. Author `KG_Combat.controller` with a locomotion blend tree, a Special-stance blend tree, and every move as an **isolated state with no inbound transitions**. Enter them with `Animator.CrossFadeInFixedTime(stateHash, blend)`. `MoveDefinition` stores the state name; hash it on enable.
+
+---
+
+## Measured frame data — supersedes the design doc
+
+Measured 4 Sep 2026 with `Tools ▸ DS2 ▸ Clip Report`. Raw output: `Docs/clip-report.csv`.
+
+**The frame-data table in `combat-design.html` is not achievable.** Every move needs a 2.3×–3.9×
+speed multiplier to hit its stated target — a systematic error, not a few bad rows. At those
+multipliers the animation reads as fast-forwarded video.
+
+| Move | Clip | Measured | Doc target | Doc needed | **New target** | **Multiplier** |
+|---|---|---|---|---|---|---|
+| Slash 1 | `Attack1` | 2.033 s | 0.60 | 3.39× | **1.00 s** | 2.03 |
+| Slash 2 | `Attack2` | 1.833 s | 0.62 | 2.96× | **0.90 s** | 2.04 |
+| Slash 3 | `Attack3` | 2.267 s | 0.90 | 2.52× | **1.15 s** | 1.97 |
+| Evade | `Evade` | 1.467 s | 0.60 | 2.44× | **0.75 s** | 1.96 |
+| Quick Shift | `Quickshift_F/B/L/R` | 1.000 s | 0.44 | 2.27× | **0.50 s** | 2.00 |
+| Draw / Sheathe | `Take` / `Put` | 1.733 / 1.667 s | 0.45 | 3.85× / 3.70× | **0.85 s** | 2.04 / 1.96 |
+| Skill 1 | `Sp_Skill1` | 3.200 s | 0.97 | 3.30× | **1.60 s** | 2.00 |
+| Skill 2 | `K_Sp_Skill_2` | 3.867 s | 1.16 | 3.33× | **1.95 s** | 1.98 |
+| Skill 3 | `Sp_Skill3` | 4.500 s | 1.45 | 3.10× | **2.25 s** | 2.00 |
+
+**Decision: a global 2.0×.** It gives round numbers, keeps every design ratio intact, and suits
+what these clips actually are — big theatrical swings travelling 1.4–2.2 m. Trying to make them
+twitchy fights the animation. The result is a heavier, more deliberate fight, closer to a Dark
+Souls greatsword than to Bloodborne. Treat 2.0× as the starting point and tune individual moves
+toward 2.5× if they feel sluggish in play; that is exactly what the per-move multiplier is for.
+
+### Two derived numbers must move with it
+
+- **Full three-slash chain: 2.1 s → 3.05 s.** So the **stun window goes 2.5 s → 3.1 s**, because
+  the doc's stated reason for its length is "exactly long enough for one full three-slash chain."
+  The `Stun` clip is 2.0 s and loops, so holding it 3.1 s is free.
+- **Posture decay: 8/s → 5.5/s.** Sustained pressure now lands 52 posture over 3.05 s (17/s) where
+  the doc assumed 52 over 2.1 s (24.8/s). Decay has to drop proportionally or the meter can never
+  be filled, and "aggression is the correct defense" stops being true.
+
+Also scale the boss's mandatory neutral gap **0.8 s → 1.0 s** to keep its relative size.
+
+### What the measurements also revealed
+
+- **`Sp_Skill3` is the only 60 fps clip** — everything else is 30. That is the entire explanation
+  for its 270 frames. Nothing is wrong with it.
+- **`Evade` has zero net displacement** (`RootXZNet 0`, `RootXZPath 0.83`). It moves and returns.
+  The design doc says Evade "gets you out of trouble but gives up your position" — that is false.
+  The real distinction is **in-place i-frames (Evade) vs. displacement (Quick Shift, 2.8–3.1 m)**,
+  which is cleaner than the doc's version. Update the doc's wording, keep the mechanic.
+- **The boss's range bands are already correct.** `Quickshift_F` travels 2.85 m and `K_Sp_Skill_2`
+  travels 5.18 m, which map almost exactly onto the doc's 2.5 m and 5 m bands.
+- **`Hit1` is `K_Hit_R.fbx` and `Hit2` is `K_Hit_L.fbx`.** The clip names carry no side information.
+  Do not guess in `HitReaction.cs`.
+- **Skill 2's clip is named `K_Sp_Skill_2`** while Skills 1 and 3 are `Sp_Skill1` / `Sp_Skill3`.
+  Vendor inconsistency; it is why that row initially had no target match.
 
 ---
 
@@ -72,13 +126,28 @@ Everything here is a hard dependency for week one. None of it is gameplay.
 
 - [x] **Import the toon shader** and fix its URP 17.6 incompatibility. *Done 4 Sep — see Vendor modifications.* Verified: toon shading, outline pass, blade matcap, and SDF face shadow tracking correctly under camera orbit.
 - [x] **Clear all compile errors.** *Done 4 Sep.* Project compiles clean; only the harmless `CS0618` warnings remain.
-- [ ] **Install Cinemachine 3** via Package Manager.
-- [ ] **Clean the prefab.** Open `Katana_Girl/Prefab/KatanaGirl_FullBody.prefab`, delete the Magica Cloth capsule-collider GameObjects and the missing-script components. Save as your own variant under `Assets/_Game/Prefabs/` — leave the pack's original untouched.
-- [ ] **Create the gameplay folder.** `Assets/_Game/{Scripts,Prefabs,Moves,Animation,Scenes,VFX,Audio}`. Nothing you write goes inside `CombatGirlsCharacterPack/` — that folder stays read-only so the demo viewer keeps working as a clip previewer.
-- [ ] **Write `ClipReportWindow.cs`** (`Assets/_Game/Scripts/Editor/`). An editor menu item that walks every clip in the pack and logs, as CSV: clip name, `clip.length`, `clip.frameRate`, `clip.hasRootCurves`, root-motion total XZ displacement, and every existing animation event with its time. **This is the single highest-value hour of the project** — it produces the real numbers that the entire frame-data table is guessing at, and the displacement column tells you how far each attack and dodge actually travels.
-- [ ] **New scene** `Assets/_Game/Scenes/Arena.unity`: flat plane, boundary, one directional light, the pack's `Dome` prefab as a cheap skybox. Add it to build settings.
+- [x] **Install Cinemachine** — 6.6.0 (the CM3 line under Unity 6 versioning). *Done 4 Sep.*
+- [x] **Create the gameplay folder.** `Assets/_Game/{Scripts,Prefabs,Moves,Animation,Scenes,VFX,Audio}`. *Done 4 Sep.* Nothing you write goes inside `CombatGirlsCharacterPack/` — that folder stays read-only so the demo viewer keeps working as a clip previewer.
+- [x] **Write `ClipReportWindow.cs`** (`Assets/_Game/Scripts/Editor/`, menu `Tools ▸ DS2 ▸ Clip Report`). *Done 4 Sep* — output in `Docs/clip-report.csv`, conclusions in *Measured frame data*.
+- [x] **Strip Magica Cloth** from `KatanaGirl_FullBody.prefab`. *Done 4 Sep* — exactly 20 Magica GameObjects and 19 missing-script components removed, verified by set-diff against the committed version. All 19 `SkinnedMeshRenderer`s, `Weapon`, `SchoolUniform`, `SportsWear` and `No_Glass` intact.
+- [x] **New scene** `Assets/_Game/Scenes/Arena.unity`. *Done 4 Sep* — floor plane, four boundary cubes with colliders, directional light, `Dome` as skybox, `CinemachineCamera`, in Build Settings with `SampleScene` disabled.
+- [ ] **Create the player prefab variant.** *Outstanding.* The vendor `Prefab/` folder was **moved** into `_Game/Prefabs/` rather than a variant being created — same GUIDs, new location. Restore the pack's folder and make a real Prefab Variant, so gameplay components land on your asset and a pack reimport cannot collide. See *Prefab ownership* below.
+- [ ] **Place `Humanoid_F_Katana`** in the arena as the training dummy.
+- [ ] **Revert the vendor viewer scene** — `git checkout -- "Assets/CombatGirlsCharacterPack/Katana_Girl/Katana_Girl_Scene.unity"` with that scene closed in Unity. Editing the prefab nulled its `ButtonGenerator.characters` reference. Harmless and out of scope, but keep the pack clean.
 
-**Done when:** the arena scene opens with a correctly-shaded Katana Girl standing on a plane, no console errors, and you have a CSV of real clip timings on disk.
+**Done when:** the arena scene opens with a correctly-shaded Katana Girl and a dummy standing on a plane, no console errors, and the player prefab is a variant under `_Game/Prefabs/`.
+
+### Prefab ownership
+
+The character must be a **Prefab Variant** of the vendor prefab, stored in `_Game/Prefabs/`, for one
+concrete reason: `CombatActor`, `PlayerLocomotion`, `PlayerCombat` and a `CharacterController` are all
+about to be added to it. On the vendor asset those are destroyed by any pack reimport — the same
+failure mode as the three HLSL/script patches above, but with gameplay code instead of six lines of
+shader. A variant keeps your components in your file while the vendor prefab stays the base.
+
+Moving the vendor folder is not equivalent: it leaves you editing the vendor asset, and because a
+move preserves GUIDs, a later reimport recreates those files at their original paths with identical
+GUIDs — a genuine conflict.
 
 ---
 
@@ -87,7 +156,7 @@ Everything here is a hard dependency for week one. None of it is gameplay.
 ### Step 1.1 — Move data and the animator (Day 2 evening – Day 3)
 
 - `MoveDefinition.cs` — ScriptableObject: `stateName`, `speedMultiplier`, `damage`, `postureDamage`, `hitboxOpenNormalized`, `hitboxCloseNormalized`, `cancelWindowNormalized`, `iframeStartNormalized`, `iframeEndNormalized`, `useRootMotion`, `nextInChain` (a `MoveDefinition` reference), `moveId` (enum, used by progression).
-- Author one asset per move in `Assets/_Game/Moves/`. Fill `speedMultiplier` from the Phase 0 CSV: `speedMultiplier = measuredLength / targetLength`. Expect ugly numbers on the specials — `Sp_Skill3` may need 3× or more. **If a multiplier exceeds ~2.5× the animation will read as sped-up video.** Raise that move's target duration in the design instead of forcing the number; the frame-data table serves the game, not the reverse.
+- Author one asset per move in `Assets/_Game/Moves/`. **Multipliers are already measured — copy them straight from the *Measured frame data* table above.** All nine sit at 1.96–2.04; there is no per-move guesswork left. If a move feels sluggish in play, push it toward 2.5× individually rather than rescaling everything.
 - `KG_Combat.controller` in `Assets/_Game/Animation/`: Base layer with a Normal locomotion 1D blend tree (`Idle → Walk → Run` on a `Speed` float), a Special locomotion blend tree, and isolated states for the 3 slashes, Evade, 4 Quick Shifts, Take, Put, 3 Skills, Hit_L, Hit_R, Stun, Die. Parameters: `Speed`, `MoveX`, `MoveY`, `Stance` (bool), and nothing else — no per-move triggers.
 
 **Done when:** you can select any move asset and see its state play at the intended duration in the animator preview.
@@ -126,7 +195,7 @@ Everything here is a hard dependency for week one. None of it is gameplay.
 
 ### Step 2.1 — Posture (Days 8–9)
 
-`PostureSystem.cs`, boss-only. Accumulate on hit, start decaying at 8/s after 1.5 s of no contact, break at 100 → `CrossFadeInFixedTime(Stun)` for 2.5 s with a ×2 damage multiplier. Keep the decay delay and rate serialized and public — they are the two dials that decide whether aggression is actually the correct defense, and you will move them twenty times.
+`PostureSystem.cs`, boss-only. Accumulate on hit, start decaying at **5.5/s** after 1.5 s of no contact, break at 100 → `CrossFadeInFixedTime(Stun)` for **3.1 s** with a ×2 damage multiplier. Both numbers are rescaled from the doc's 8/s and 2.5 s to match the measured 3.05 s chain — see *Measured frame data*. Keep the decay delay and rate serialized and public; they are the two dials that decide whether aggression is actually the correct defense, and you will move them twenty times.
 
 **Done when:** sustained pressure breaks the dummy and poke-and-retreat visibly does not.
 
@@ -135,7 +204,7 @@ Everything here is a hard dependency for week one. None of it is gameplay.
 `BossAI.cs`. Weighted random over range bands, nothing more. No behaviour tree, no utility framework, no package.
 
 - Range bands: close < 2.5 m (slash chains), mid 2.5–5 m (Quick Shift F or Skill 2 as a lunge), far > 5 m (approach, or hold Special stance and walk).
-- **The mandatory gap:** max 3 attacks, then a hard 0.8 s neutral window. Write this first, before the selection logic. In a game with no block button, this single rule is the difference between "hard" and "broken."
+- **The mandatory gap:** max 3 attacks, then a hard **1.0 s** neutral window (rescaled from the doc's 0.8 s along with everything else). Write this first, before the selection logic. In a game with no block button, this single rule is the difference between "hard" and "broken."
 - Per-move cooldowns so she can't repeat the same read twice.
 - Whiff punish: on detecting player recovery frames, ~30% chance to immediately attack.
 - Patience timer: if the player hasn't closed within N seconds, she closes instead.
@@ -231,7 +300,9 @@ No unit tests. In a 30-day solo action game the test harness is you, playing it,
 | Risk | Mitigation |
 |---|---|
 | Boss AI eats the schedule | Hard stop day 12. Weighted random over range bands only. |
-| Speed multipliers make the specials look like fast-forward | Measure day 2. If a multiplier exceeds ~2.5×, change the design target, not the animation. |
+| ~~Speed multipliers make the specials look like fast-forward~~ | **Closed 4 Sep.** Measured: the whole table needed 2.3–3.9×. Retargeted to a global 2.0×, with the stun window and posture decay rescaled to match. |
+| Gameplay components land on a vendor asset | The player must be a Prefab Variant in `_Game/Prefabs/`. A pack reimport destroys components added to the vendor prefab. |
+| The fight now runs 45% slower than designed | Deliberate — the animations are heavy. Watch it in the day 13–14 playtest; if it drags, push individual moves toward 2.5× rather than rescaling globally again. |
 | Feel work gets cut | Scheduled days 20–21, ahead of HUD and tuning. It is the product, not polish. |
 | ~~Toon shader fights URP 17~~ | **Closed 4 Sep.** One-line HLSL patch; see *Vendor modifications*. Re-opens on any pack reimport. |
 | Vendor patches lost to a reimport | Three unrecorded hand-edits documented above. Commit them; a reimport silently reverts all three. |
