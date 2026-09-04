@@ -1,5 +1,74 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4595158450963888498
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6817844311687052374}
+  - component: {fileID: 6092062080595954028}
+  - component: {fileID: 4332365816620043074}
+  m_Layer: 3
+  m_Name: Hurtbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6817844311687052374
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4595158450963888498}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.725, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8696492139385498074}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &6092062080595954028
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4595158450963888498}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.56
+  m_Height: 1.95
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4332365816620043074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4595158450963888498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9ba3d6f1a066e247b6854dcdcf61f4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.Hurtbox
+  owner: {fileID: 6207691663832221665}
 --- !u!1001 &6727683065357826921
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -56,12 +125,82 @@ PrefabInstance:
       propertyPath: m_Name
       value: TrainingDummy
       objectReference: {fileID: 0}
+    - target: {fileID: 4794519881857070834, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.1713626
+      objectReference: {fileID: 0}
+    - target: {fileID: 4794519881857070834, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.024336295
+      objectReference: {fileID: 0}
     - target: {fileID: 8290424638339614921, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: b80b86770d1f756479d06455203d180a, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2733031435217457843, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6817844311687052374}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3361511819853989897, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6207691663832221665}
+    - targetCorrespondingSourceObject: {fileID: 3361511819853989897, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 68005564219413449}
   m_SourcePrefab: {fileID: 100100000, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+--- !u!1 &8357543097520681824 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3361511819853989897, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+  m_PrefabInstance: {fileID: 6727683065357826921}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6207691663832221665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8357543097520681824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afe9ba3999c3f0341969aa5b01161c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.CombatActor
+  maxHealth: 100
+  hitbox: {fileID: 0}
+  hitReaction: {fileID: 0}
+  logHits: 0
+--- !u!54 &68005564219413449
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8357543097520681824}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!4 &8696492139385498074 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2733031435217457843, guid: 436ca230620d80048b2191b08ef4edec, type: 3}
+  m_PrefabInstance: {fileID: 6727683065357826921}
+  m_PrefabAsset: {fileID: 0}

@@ -36,11 +36,13 @@ namespace DS2
         public string stateName;
 
         [Header("Playback")]
-        [Tooltip("measuredClipLength / duration. Measured 4 Sep 2026; see Docs/build-plan.md.")]
+        [Tooltip("THE tuning dial for this move. Drives the animation playback rate AND every " +
+                 "timing window, live, while the game is running. 1 is the animator's own pacing.")]
         public float speedMultiplier = 1f;
 
-        [Tooltip("How long the move takes once speedMultiplier is applied, in seconds.")]
-        public float duration = 1f;
+        [Tooltip("Raw clip length in seconds at speed 1. Measured from the source FBX - not a " +
+                 "tuning value, do not hand-edit. See Docs/clip-report.csv.")]
+        public float measuredLength = 1f;
 
         [Tooltip("On for attacks and dodges - the clips carry real displacement and stripping it " +
                  "makes every swing feel weightless. Off for locomotion.")]
@@ -57,6 +59,26 @@ namespace DS2
         [Header("Invulnerability window (normalized)")]
         [Range(0f, 1f)] public float iframeStart;
         [Range(0f, 1f)] public float iframeEnd;
+
+        [Header("Trim")]
+        [Tooltip("Normalized point where the move is considered over and control returns. 1 plays " +
+                 "the whole clip. Lower it to cut dead recovery: these clips are full draw-cut-" +
+                 "sheathe cycles and most of them end with the character simply standing there.")]
+        [Range(0.1f, 1f)] public float moveEnd = 1f;
+
+        [Header("Weapon socket")]
+        [Tooltip("Optional. Applied to Character_Weapon_Controller when the move starts, e.g. " +
+                 "To_Hand_R_Socket-Blade to draw. Leave empty to let the clip's own baked " +
+                 "SwitchSocket events decide. " +
+                 "Required for imported animations: downloaded clips carry no SwitchSocket events, " +
+                 "so without this the katana stays wherever the last vendor clip left it - usually " +
+                 "sheathed, while she swings an empty hand.")]
+        public string weaponSocket;
+
+        [Tooltip("Optional. Applied when the move ENDS. The clip's own baked events fire partway " +
+                 "through and will sheathe the blade whether you asked or not, so this is what " +
+                 "actually keeps it drawn between attacks.")]
+        public string endWeaponSocket;
 
         [Header("Cancelling")]
         [Tooltip("Earliest normalized time an input may cancel this move into nextInChain. " +
@@ -77,6 +99,12 @@ namespace DS2
                 return cachedHash;
             }
         }
+
+        /// <summary>
+        /// How long the move actually takes, in seconds. Derived rather than stored so that
+        /// changing speedMultiplier can never desync the animation from the timing windows.
+        /// </summary>
+        public float Duration => speedMultiplier > 0.01f ? measuredLength / speedMultiplier : measuredLength;
 
         public bool HasHitbox => hitboxClose > hitboxOpen;
         public bool HasIFrames => iframeEnd > iframeStart;

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
   moveId: 11
   stateName: Sp_Skill1
-  speedMultiplier: 2
-  duration: 1.6
+  speedMultiplier: 1.4
+  measuredLength: 3.2
   useRootMotion: 1
   damage: 18
   postureDamage: 30
@@ -23,5 +23,8 @@ MonoBehaviour:
   hitboxClose: 0.433
   iframeStart: 0
   iframeEnd: 0
+  moveEnd: 0.93
+  weaponSocket: 
+  endWeaponSocket: 
   cancelWindow: 1
   nextInChain: {fileID: 0}

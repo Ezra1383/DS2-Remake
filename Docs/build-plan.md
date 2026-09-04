@@ -60,22 +60,19 @@ multipliers the animation reads as fast-forwarded video.
 | Skill 2 | `K_Sp_Skill_2` | 3.867 s | 1.16 | 3.33× | **1.95 s** | 1.98 |
 | Skill 3 | `Sp_Skill3` | 4.500 s | 1.45 | 3.10× | **2.25 s** | 2.00 |
 
-**Decision: a global 2.0×.** It gives round numbers, keeps every design ratio intact, and suits
-what these clips actually are — big theatrical swings travelling 1.4–2.2 m. Trying to make them
-twitchy fights the animation. The result is a heavier, more deliberate fight, closer to a Dark
-Souls greatsword than to Bloodborne. Treat 2.0× as the starting point and tune individual moves
-toward 2.5× if they feel sluggish in play; that is exactly what the per-move multiplier is for.
+**2.0x was tried in play and rejected — it read as absurdly fast.** The "New target" column above
+is therefore superseded; see *Tempo, trim and the blade* below for the settled 1.4x. The useful part
+of this table is the **Measured** column, which is fact.
 
-### Two derived numbers must move with it
+### Derived numbers still owed
 
-- **Full three-slash chain: 2.1 s → 3.05 s.** So the **stun window goes 2.5 s → 3.1 s**, because
-  the doc's stated reason for its length is "exactly long enough for one full three-slash chain."
-  The `Stun` clip is 2.0 s and loops, so holding it 3.1 s is free.
-- **Posture decay: 8/s → 5.5/s.** Sustained pressure now lands 52 posture over 3.05 s (17/s) where
-  the doc assumed 52 over 2.1 s (24.8/s). Decay has to drop proportionally or the meter can never
-  be filled, and "aggression is the correct defense" stops being true.
+The stun window and posture decay both scale with tempo, and the trims change the chain length
+again. **Compute these against the final tempo when building Step 2.1**, not from this table:
 
-Also scale the boss's mandatory neutral gap **0.8 s → 1.0 s** to keep its relative size.
+- Stun window must equal roughly one full three-slash chain, per the design doc's own reasoning.
+- Posture decay must stay proportional to posture-per-second landed, or the meter cannot be filled
+  and "aggression is the correct defense" stops being true.
+- The boss's mandatory neutral gap scales with everything else (0.8 s at the doc's original pace).
 
 ### What the measurements also revealed
 
@@ -314,9 +311,46 @@ No unit tests. In a 30-day solo action game the test harness is you, playing it,
 | Risk | Mitigation |
 |---|---|
 | Boss AI eats the schedule | Hard stop day 12. Weighted random over range bands only. |
-| ~~Speed multipliers make the specials look like fast-forward~~ | **Closed 4 Sep.** Measured: the whole table needed 2.3–3.9×. Retargeted to a global 2.0×, with the stun window and posture decay rescaled to match. |
+| ~~Speed multipliers make the specials look like fast-forward~~ | **Closed 4 Sep.** Measured, then tuned in play: settled at a global **1.4×**, one constant in `CombatSetupTools.cs`. |
 | Gameplay components land on a vendor asset | The player must be a Prefab Variant in `_Game/Prefabs/`. A pack reimport destroys components added to the vendor prefab. |
 | The fight now runs 45% slower than designed | Deliberate — the animations are heavy. Watch it in the day 13–14 playtest; if it drags, push individual moves toward 2.5× rather than rescaling globally again. |
+
+---
+
+## Tempo, trim and the blade — settled 4 Sep
+
+**Tempo is one constant**, `Tempo` in `CombatSetupTools.cs`, currently **1.4x**. The design doc's
+frame data implied 2.3-3.9x; 2.0x was tried in play and read as absurdly fast. These clips are
+authored with real anticipation and speeding them up destroys the wind-up telegraphs depend on.
+Change the constant, re-run both menu items, and the whole game retunes.
+
+Per-move, `speedMultiplier` on the asset is the **live** dial - the animator states read their rate
+from a `MoveSpeed` float that `CombatActor` sets, so dragging the slider mid-play works. `Duration`
+is derived (`measuredLength / speedMultiplier`) so animation and timing windows cannot desync.
+
+**`moveEnd` trims dead recovery.** Every vendor attack is a full draw-cut-sheathe cycle and the tail
+is the character standing still - 38% of Slash 1. `CombatActor.EndMove` cross-fades back to
+locomotion explicitly, so the trim actually cuts the animation rather than just unlocking input.
+
+**The blade stays drawn for normals and dodges; Specials keep the full iai cycle.**
+
+| | Blade | `moveEnd` |
+|---|---|---|
+| Slash 1 / 2 / 3 | drawn | 0.52 / 0.50 / 0.55 |
+| Evade, Quick Shift x4 | drawn | 1.0 |
+| Skill 1 / 2 / 3 | **sheathes** | 0.93 / 0.93 / 0.85 |
+| Draw / Sheathe | untouched | 1.0 |
+
+Held by `MoveDefinition.weaponSocket` / `endWeaponSocket` plus `WeaponStance`, which re-asserts the
+socket every LateUpdate because `Idle` loops and re-fires its own sheathe event.
+
+**This gives Week 2 a telegraph for free.** The boss can use her own move assets pointing at the
+same animator states with `moveEnd = 1` and no socket override - so *she* performs the full
+cinematic sheathe after a combo, which is a readable "I am committed, punish me now" window. Same
+clips, different data. Build the boss set when wiring Step 2.2.
+
+**Still open:** final trim values need a tuning pass. Numbers above are starting points, and
+`Build Move Assets` overwrites hand edits from the `Specs` table.
 
 ---
 

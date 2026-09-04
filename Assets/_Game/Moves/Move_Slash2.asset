@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
   moveId: 2
   stateName: Attack2
-  speedMultiplier: 2.0366666
-  duration: 0.9
+  speedMultiplier: 1.4
+  measuredLength: 1.833
   useRootMotion: 1
   damage: 10
   postureDamage: 15
@@ -23,5 +23,8 @@ MonoBehaviour:
   hitboxClose: 0.419
   iframeStart: 0
   iframeEnd: 0
+  moveEnd: 0.5
+  weaponSocket: To_Hand_R_Socket-Blade
+  endWeaponSocket: To_Hand_R_Socket-Blade
   cancelWindow: 0.484
   nextInChain: {fileID: 11400000, guid: ae0fa6652e76a2d41aa8f7c0c37af0da, type: 2}

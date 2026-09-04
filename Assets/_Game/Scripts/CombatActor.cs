@@ -23,11 +23,17 @@ namespace DS2
 
         [SerializeField] HitReaction hitReaction;
 
+        [Header("Blend")]
+        [Tooltip("Cross-fade back to locomotion when a move ends. Short enough that a trimmed " +
+                 "move feels cut, long enough not to snap.")]
+        [SerializeField] float blendOut = 0.12f;
+
         [Header("Debug")]
         [SerializeField] bool logHits;
 
         Animator animator;
         PlayerLocomotion locomotion;
+        Character_Weapon_Controller weapon;
 
         public int Health { get; private set; }
         public bool IsDead { get; private set; }
@@ -45,6 +51,11 @@ namespace DS2
         public event System.Action<CombatActor, MoveDefinition> Damaged;
         public event System.Action<CombatActor> Died;
 
+        static readonly int MoveSpeedParam = Animator.StringToHash("MoveSpeed");
+        static readonly int StanceParam = Animator.StringToHash("Stance");
+        static readonly int LocomotionState = Animator.StringToHash("Locomotion");
+        static readonly int LocomotionSpecialState = Animator.StringToHash("LocomotionSpecial");
+
         float moveTimer;
         bool hitboxOpen;
 
@@ -54,6 +65,7 @@ namespace DS2
         {
             animator = GetComponent<Animator>();
             locomotion = GetComponent<PlayerLocomotion>();
+            weapon = GetComponent<Character_Weapon_Controller>();
             Health = maxHealth;
         }
 
@@ -62,7 +74,7 @@ namespace DS2
             if (IsDead || CurrentMove == null) return;
 
             moveTimer += Time.deltaTime;
-            float t = Mathf.Clamp01(moveTimer / CurrentMove.duration);
+            float t = Mathf.Clamp01(moveTimer / CurrentMove.Duration);
 
             if (CurrentMove.HasHitbox && hitbox != null)
             {
@@ -78,7 +90,7 @@ namespace DS2
             IsInvulnerable = CurrentMove.HasIFrames &&
                              t >= CurrentMove.iframeStart && t < CurrentMove.iframeEnd;
 
-            if (t >= 1f) EndMove();
+            if (t >= CurrentMove.moveEnd) EndMove();
         }
 
         /// <summary>
@@ -94,7 +106,7 @@ namespace DS2
             {
                 bool canCancel = CurrentMove.CanChain &&
                                  CurrentMove.nextInChain == move &&
-                                 moveTimer / CurrentMove.duration >= CurrentMove.cancelWindow;
+                                 moveTimer / CurrentMove.Duration >= CurrentMove.cancelWindow;
                 if (!canCancel) return false;
             }
 
@@ -109,6 +121,14 @@ namespace DS2
             CurrentMove = move;
             moveTimer = 0f;
 
+            // The state reads its playback rate from this parameter, so speedMultiplier on the
+            // asset is live: change it in the inspector mid-play and the next swing uses it.
+            // Imported clips carry no SwitchSocket events, so the move asset can place the
+            // blade itself. Vendor clips leave this empty and drive it from their own events.
+            if (weapon != null && !string.IsNullOrEmpty(move.weaponSocket))
+                weapon.SwitchSocketByString(move.weaponSocket);
+
+            animator.SetFloat(MoveSpeedParam, move.speedMultiplier);
             animator.CrossFadeInFixedTime(move.StateHash, 0.05f);
 
             if (locomotion != null)
@@ -121,6 +141,16 @@ namespace DS2
         void EndMove()
         {
             CloseHitbox();
+
+            if (weapon != null && CurrentMove != null && !string.IsNullOrEmpty(CurrentMove.endWeaponSocket))
+                weapon.SwitchSocketByString(CurrentMove.endWeaponSocket);
+
+            // Leave the state explicitly rather than waiting for its exit-time transition.
+            // Otherwise a move trimmed by moveEnd keeps animating - which is how you end up
+            // watching her mime sheathing a sword that is still in her hand.
+            animator.CrossFadeInFixedTime(
+                animator.GetBool(StanceParam) ? LocomotionSpecialState : LocomotionState, blendOut);
+
             CurrentMove = null;
             IsInvulnerable = false;
 
