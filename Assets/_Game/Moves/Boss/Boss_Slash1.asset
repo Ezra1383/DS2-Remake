@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5be08724df07c9a408da0daf3edcd834, type: 3}
-  m_Name: Move_Slash1
+  m_Name: Boss_Slash1
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
   moveId: 1
   stateName: Attack1
@@ -23,9 +23,9 @@ MonoBehaviour:
   hitboxClose: 0.467
   iframeStart: 0
   iframeEnd: 0
-  moveEnd: 0.52
-  weaponSocket: To_Hand_R_Socket-Blade
-  endWeaponSocket: To_Hand_R_Socket-Blade
+  moveEnd: 1
+  weaponSocket: 
+  endWeaponSocket: 
   cancelWindow: 0.467
-  nextInChain: {fileID: 11400000, guid: 2a86ecb91786cf44680fd00c9e811622, type: 2}
+  nextInChain: {fileID: 11400000, guid: 95a26200bc02fb247a5441e6f6a45231, type: 2}
   chainChance: 1

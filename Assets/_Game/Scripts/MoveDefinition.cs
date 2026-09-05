@@ -87,6 +87,12 @@ namespace DS2
 
         public MoveDefinition nextInChain;
 
+        [Tooltip("How often an AI continues into nextInChain. 1 always, 0 never. The player " +
+                 "ignores this - they chain by pressing attack. This is what makes her combos " +
+                 "learnable: a fixed opener that sometimes extends is readable, a coin flip at " +
+                 "every link is not.")]
+        [Range(0f, 1f)] public float chainChance = 1f;
+
         [System.NonSerialized] int cachedHash;
 
         /// <summary>Animator state hash, resolved once on first use.</summary>

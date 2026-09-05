@@ -18,7 +18,26 @@ namespace DS2.EditorTools
     static class CombatSetupTools
     {
         const string AnimFolder = "Assets/CombatGirlsCharacterPack/Katana_Girl/Animations";
+        const string KiFolder = "Assets/Kevin Iglesias/Human Animations/Animations/Female";
+
+        /// <summary>
+        /// Eight-way locomotion, as offsets on the MoveX/MoveY plane. MoveX is right, MoveY is
+        /// forward, both in the character's local space - so these are literally which way she
+        /// is travelling relative to where she is looking.
+        /// </summary>
+        static readonly (string suffix, Vector2 dir)[] Directions =
+        {
+            ("Forward",       new Vector2( 0f,     1f)),
+            ("ForwardRight",  new Vector2( 0.707f, 0.707f)),
+            ("Right",         new Vector2( 1f,     0f)),
+            ("BackwardRight", new Vector2( 0.707f,-0.707f)),
+            ("Backward",      new Vector2( 0f,    -1f)),
+            ("BackwardLeft",  new Vector2(-0.707f,-0.707f)),
+            ("Left",          new Vector2(-1f,     0f)),
+            ("ForwardLeft",   new Vector2(-0.707f, 0.707f)),
+        };
         const string MovesFolder = "Assets/_Game/Moves";
+        const string BossMovesFolder = "Assets/_Game/Moves/Boss";
         const string ControllerPath = "Assets/_Game/Animation/KG_Combat.controller";
 
         /// <summary>
@@ -34,6 +53,21 @@ namespace DS2.EditorTools
         /// </summary>
         const float Tempo = 1.4f;
 
+        /// <summary>
+        /// Eight-way locomotion instead of the vendor's forward-only set.
+        ///
+        /// OFF as of 5 Sep. The Kevin Iglesias clips are technically ideal - Humanoid, in-place
+        /// and [RM] variants, all eight directions - but they are realistic mocap retargeted onto
+        /// a stylised anime rig, and the result looks ridiculous next to the vendor animations.
+        /// A style mismatch is not something blend weights can fix.
+        ///
+        /// The 2D tree, MoveX/MoveY and the strafing rotation are all written and correct. Turn
+        /// this on the moment there is an eight-way set that matches the vendor's style - most
+        /// likely Walk_Back / Strafe_L / Strafe_R adapted from the vendor's own Walk, which keeps
+        /// the proportions and the exaggeration. Set PlayerLocomotion.hasDirectionalClips to match.
+        /// </summary>
+        const bool DirectionalLocomotion = false;
+
         struct Spec
         {
             public MoveId id;
@@ -42,6 +76,11 @@ namespace DS2.EditorTools
             public int damage, posture;
             public float hbOpen, hbClose, ifStart, ifEnd, cancel;
             public MoveId chainTo;
+
+            /// <summary>Odds an AI continues into chainTo. 0 means "use 1".</summary>
+            public float chain;
+
+            public float ChainChance => chain > 0f ? chain : 1f;
 
             /// <summary>Per-move override. Left at 0 the global Tempo is used.</summary>
             public float tempo;
@@ -62,9 +101,9 @@ namespace DS2.EditorTools
         static readonly Spec[] Specs =
         {
             new Spec { id = MoveId.Slash1, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
-                       damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2 },
+                       damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2, chain = 1.0f },
             new Spec { id = MoveId.Slash2, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
-                       damage = 10, posture = 15, hbOpen = 0.258f, hbClose = 0.419f, cancel = 0.484f, chainTo = MoveId.Slash3 },
+                       damage = 10, posture = 15, hbOpen = 0.258f, hbClose = 0.419f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
             new Spec { id = MoveId.Slash3, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 
@@ -100,14 +139,26 @@ namespace DS2.EditorTools
         };
 
         [MenuItem("Tools/DS2/Build Move Assets")]
-        static void BuildMoves()
+        static void BuildMoves() => BuildMoveSet(MovesFolder, "Move_", forBoss: false);
+
+        /// <summary>
+        /// The boss runs the same animator states off her own assets, with moveEnd = 1 and no
+        /// socket override - so she plays the full draw-cut-sheathe cycle. That sheathe is her
+        /// telegraph: a readable "I am committed, punish me now" window, which the player's
+        /// trimmed version deliberately throws away.
+        /// </summary>
+        [MenuItem("Tools/DS2/Build Boss Move Assets")]
+        static void BuildBossMoves() => BuildMoveSet(BossMovesFolder, "Boss_", forBoss: true);
+
+        static void BuildMoveSet(string folder, string prefix, bool forBoss)
         {
+            string MovesFolder = folder;
             Directory.CreateDirectory(Path.GetFullPath(MovesFolder));
             var made = new Dictionary<MoveId, MoveDefinition>();
 
             foreach (Spec s in Specs)
             {
-                string path = MovesFolder + "/Move_" + s.id + ".asset";
+                string path = MovesFolder + "/" + prefix + s.id + ".asset";
                 var move = AssetDatabase.LoadAssetAtPath<MoveDefinition>(path);
                 if (move == null)
                 {
@@ -127,9 +178,10 @@ namespace DS2.EditorTools
                 move.iframeStart = s.ifStart;
                 move.iframeEnd = s.ifEnd;
                 move.cancelWindow = s.cancel;
-                move.moveEnd = s.End;
-                move.weaponSocket = s.socket;
-                move.endWeaponSocket = s.endSocket;
+                move.chainChance = s.ChainChance;
+                move.moveEnd = forBoss ? 1f : s.End;
+                move.weaponSocket = forBoss ? "" : s.socket;
+                move.endWeaponSocket = forBoss ? "" : s.endSocket;
 
                 EditorUtility.SetDirty(move);
                 made[s.id] = move;
@@ -148,6 +200,64 @@ namespace DS2.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DS2] " + made.Count + " move assets written to " + MovesFolder);
+        }
+
+        /// <summary>
+        /// Her repertoire and how she picks from it. Slash2 and Slash3 carry weight 0 on purpose:
+        /// she reaches them by chaining out of Slash1, so the combo reads as a combo instead of
+        /// three unrelated swings. Cooldowns are what stop her leaning on one answer.
+        /// </summary>
+        static readonly (MoveId id, float weight, float min, float max, float cooldown)[] BossPlan =
+        {
+            (MoveId.Slash1,      3.0f, 0f,   2.8f,  0f),
+            (MoveId.Slash2,      0f,   0f,   2.8f,  0f),   // chain only
+            (MoveId.Slash3,      0f,   0f,   2.8f,  0f),   // chain only
+            (MoveId.Skill1,      1.0f, 0f,   3.0f,  6f),
+            (MoveId.Skill2,      1.0f, 2.5f, 5.5f,  8f),   // the 5.18 m lunge
+            (MoveId.Skill3,      0.6f, 0f,   3.0f, 12f),   // her heaviest, rarest
+            (MoveId.QuickShiftF, 2.0f, 2.5f, 5.0f,  3f),   // covers 2.85 m
+            (MoveId.QuickShiftB, 0f, 0f,   2.0f,  7f),   // make space
+            (MoveId.QuickShiftL, 0f, 0f,   3.0f,  6f),   // circle
+            (MoveId.QuickShiftR, 0f, 0f,   3.0f,  6f),
+        };
+
+        [MenuItem("Tools/DS2/Build Boss Moveset")]
+        static void BuildBossMoveset()
+        {
+            const string path = BossMovesFolder + "/BossMoveset.asset";
+            Directory.CreateDirectory(Path.GetFullPath(BossMovesFolder));
+
+            var set = AssetDatabase.LoadAssetAtPath<BossMoveset>(path);
+            if (set == null)
+            {
+                set = ScriptableObject.CreateInstance<BossMoveset>();
+                AssetDatabase.CreateAsset(set, path);
+            }
+
+            var list = new List<BossMoveset.Entry>();
+            foreach ((MoveId id, float weight, float min, float max, float cooldown) p in BossPlan)
+            {
+                var move = AssetDatabase.LoadAssetAtPath<MoveDefinition>(
+                    BossMovesFolder + "/Boss_" + p.id + ".asset");
+
+                if (move == null)
+                {
+                    Debug.LogWarning("[DS2] Boss_" + p.id + " missing - run Build Boss Move Assets first.");
+                    continue;
+                }
+
+                list.Add(new BossMoveset.Entry
+                {
+                    move = move, weight = p.weight,
+                    minRange = p.min, maxRange = p.max, cooldown = p.cooldown,
+                });
+            }
+
+            set.entries = list.ToArray();
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[DS2] Boss moveset: " + list.Count + " entries -> " + path);
         }
 
         [MenuItem("Tools/DS2/Build Combat Animator")]
@@ -181,7 +291,9 @@ namespace DS2.EditorTools
 
             AnimatorStateMachine sm = controller.layers[0].stateMachine;
 
-            AnimatorState normal = MakeLocomotion(controller, "Locomotion", clips, "Idle", "Walk", "Run");
+            AnimatorState normal = DirectionalLocomotion
+                ? MakeLocomotion2D(controller, "Locomotion", clips)
+                : MakeLocomotion(controller, "Locomotion", clips, "Idle", "Walk", "Run");
             AnimatorState special = MakeLocomotion(controller, "LocomotionSpecial", clips, "Sp_Idle", "Sp_Walk", "Sp_Run");
             sm.defaultState = normal;
 
@@ -234,6 +346,60 @@ namespace DS2.EditorTools
             // referenced them leaves them orphaned in there, accumulating on every rebuild.
             foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(ControllerPath))
                 if (o is BlendTree tree) Object.DestroyImmediate(tree, true);
+        }
+
+        /// <summary>
+        /// Idle / 8-way walk / 8-way run, as a 1D tree on Speed whose walk and run children are
+        /// each a 2D directional tree on MoveX/MoveY.
+        ///
+        /// This is what makes lock-on work: she can hold her facing at the target and still move
+        /// in any direction, because there is now a clip for every direction. The vendor pack had
+        /// forward locomotion only, which is why she used to turn to face wherever she was going.
+        /// </summary>
+        static AnimatorState MakeLocomotion2D(AnimatorController c, string name,
+                                              Dictionary<string, AnimationClip> clips)
+        {
+            AnimatorState state = c.CreateBlendTreeInController(name, out BlendTree root, 0);
+            root.blendType = BlendTreeType.Simple1D;
+            root.blendParameter = "Speed";
+            root.useAutomaticThresholds = false;
+
+            // A combat-ready idle, not the arms-down one - she is holding a drawn sword now.
+            if (clips.TryGetValue("HumanF@CombatIdle1H01", out AnimationClip idle))
+                root.AddChild(idle, 0f);
+            else if (clips.TryGetValue("Idle", out AnimationClip fallbackIdle))
+                root.AddChild(fallbackIdle, 0f);
+
+            AddDirectionalTier(root, clips, "HumanF@Walk01_", "Walk", 0.5f);
+            AddDirectionalTier(root, clips, "HumanF@Run01_", "Run", 1f);
+            return state;
+        }
+
+        static void AddDirectionalTier(BlendTree root, Dictionary<string, AnimationClip> clips,
+                                       string prefix, string label, float threshold)
+        {
+            BlendTree tier = root.CreateBlendTreeChild(threshold);
+            tier.name = label;
+            tier.blendType = BlendTreeType.SimpleDirectional2D;
+            tier.blendParameter = "MoveX";
+            tier.blendParameterY = "MoveY";
+            tier.useAutomaticThresholds = false;
+
+            int found = 0;
+            foreach ((string suffix, Vector2 dir) d in Directions)
+            {
+                // In-place clips only. The [RM] variants carry root motion, which would fight
+                // the scripted locomotion in PlayerLocomotion.OnAnimatorMove.
+                if (clips.TryGetValue(prefix + d.suffix, out AnimationClip clip))
+                {
+                    tier.AddChild(clip, d.dir);
+                    found++;
+                }
+            }
+
+            if (found < Directions.Length)
+                Debug.LogWarning("[DS2] " + label + ": only " + found + "/" + Directions.Length +
+                                 " directions found for prefix " + prefix);
         }
 
         static AnimatorState MakeLocomotion(AnimatorController c, string name,
@@ -290,7 +456,11 @@ namespace DS2.EditorTools
         static Dictionary<string, AnimationClip> LoadClips()
         {
             var map = new Dictionary<string, AnimationClip>();
-            foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { AnimFolder }))
+            string[] folders = AssetDatabase.IsValidFolder(KiFolder)
+                ? new[] { AnimFolder, KiFolder }
+                : new[] { AnimFolder };
+
+            foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", folders))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 foreach (Object o in AssetDatabase.LoadAllAssetRepresentationsAtPath(path))

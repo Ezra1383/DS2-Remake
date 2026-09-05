@@ -204,13 +204,13 @@ dummy ahead, feet not sliding. *Met — mild residual slide on run, accepted for
 
 ## Phase 2 — Make it a fight (Days 8–14, to 16 Sep)
 
-### Step 2.1 — Posture (Days 8–9)
+### Step 2.1 — Posture (Days 8–9) — **DONE 5 Sep**
 
 `PostureSystem.cs`, boss-only. Accumulate on hit, start decaying at **5.5/s** after 1.5 s of no contact, break at 100 → `CrossFadeInFixedTime(Stun)` for **3.1 s** with a ×2 damage multiplier. Both numbers are rescaled from the doc's 8/s and 2.5 s to match the measured 3.05 s chain — see *Measured frame data*. Keep the decay delay and rate serialized and public; they are the two dials that decide whether aggression is actually the correct defense, and you will move them twenty times.
 
 **Done when:** sustained pressure breaks the dummy and poke-and-retreat visibly does not.
 
-### Step 2.2 — Boss AI (Days 10–12) — HARD THREE-DAY BUDGET
+### Step 2.2 — Boss AI (Days 10–12) — **DONE 5 Sep, in one day**
 
 `BossAI.cs`. Weighted random over range bands, nothing more. No behaviour tree, no utility framework, no package.
 

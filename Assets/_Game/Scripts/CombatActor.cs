@@ -32,21 +32,37 @@ namespace DS2
         [SerializeField] bool logHits;
 
         Animator animator;
-        PlayerLocomotion locomotion;
+        ActorLocomotion locomotion;
         Character_Weapon_Controller weapon;
 
         public int Health { get; private set; }
         public bool IsDead { get; private set; }
         public bool IsInvulnerable { get; private set; }
 
+        /// <summary>Set by PostureSystem while broken. Blocks every action.</summary>
+        public bool IsStunned { get; set; }
+
         /// <summary>The move currently executing, or null when neutral.</summary>
         public MoveDefinition CurrentMove { get; private set; }
+
+        /// <summary>0-1 through the current move. Lets an opponent read a swing in flight.</summary>
+        public float MoveProgress =>
+            CurrentMove != null ? Mathf.Clamp01(moveTimer / CurrentMove.Duration) : 0f;
 
         /// <summary>Set on every hit taken. On death this is the move that killed you.</summary>
         public MoveDefinition LastDamageSource { get; private set; }
 
         /// <summary>Multiplies incoming damage. PostureSystem raises this to 2 during stun.</summary>
         public float DamageTakenMultiplier { get; set; } = 1f;
+
+        /// <summary>
+        /// Scales damage this actor DEALS. The moves are mirrored, so this is what makes the boss
+        /// hit for three-to-five-hits-and-you-die while using the player's own numbers. It is also
+        /// the fastest lever on how long the ten-death arc runs - tune it first in Week 4.
+        /// </summary>
+        public float DamageDealtMultiplier => damageDealtMultiplier;
+
+        [SerializeField] float damageDealtMultiplier = 1f;
 
         public event System.Action<CombatActor, MoveDefinition> Damaged;
         public event System.Action<CombatActor> Died;
@@ -64,7 +80,7 @@ namespace DS2
         protected virtual void Awake()
         {
             animator = GetComponent<Animator>();
-            locomotion = GetComponent<PlayerLocomotion>();
+            locomotion = GetComponent<ActorLocomotion>();
             weapon = GetComponent<Character_Weapon_Controller>();
             Health = maxHealth;
         }
@@ -100,7 +116,7 @@ namespace DS2
         /// </summary>
         public virtual bool TryExecute(MoveDefinition move)
         {
-            if (IsDead || move == null) return false;
+            if (IsDead || IsStunned || move == null) return false;
 
             if (CurrentMove != null)
             {
@@ -151,6 +167,24 @@ namespace DS2
             animator.CrossFadeInFixedTime(
                 animator.GetBool(StanceParam) ? LocomotionSpecialState : LocomotionState, blendOut);
 
+            CurrentMove = null;
+            IsInvulnerable = false;
+
+            if (locomotion != null)
+            {
+                locomotion.IsBusy = false;
+                locomotion.RootMotionDriven = false;
+            }
+        }
+
+        /// <summary>
+        /// Drops whatever is executing without playing its recovery. Used by PostureSystem on a
+        /// break, so a stun can cut her out of her own swing.
+        /// </summary>
+        public void Interrupt()
+        {
+            if (CurrentMove == null) return;
+            CloseHitbox();
             CurrentMove = null;
             IsInvulnerable = false;
 

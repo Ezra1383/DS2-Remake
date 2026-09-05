@@ -28,3 +28,4 @@ MonoBehaviour:
   endWeaponSocket: 
   cancelWindow: 1
   nextInChain: {fileID: 0}
+  chainChance: 1

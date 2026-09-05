@@ -57,9 +57,14 @@ namespace DS2
             if (victim == owner) return;
             if (!alreadyHit.Add(victim)) return;
 
-            // Step 2.1 adds the posture call here: move.postureDamage into the victim's
-            // PostureSystem. Deliberately absent until that system exists.
-            victim.ApplyDamage(move.damage, move, owner != null ? owner.transform.position : transform.position);
+            int damage = Mathf.RoundToInt(
+                move.damage * (owner != null ? owner.DamageDealtMultiplier : 1f));
+
+            victim.ApplyDamage(damage, move, owner != null ? owner.transform.position : transform.position);
+
+            // Posture is boss-only, so most targets have no PostureSystem and that is fine.
+            if (victim.TryGetComponent(out PostureSystem posture))
+                posture.Add(move.postureDamage);
         }
     }
 }

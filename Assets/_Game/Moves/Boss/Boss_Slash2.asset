@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5be08724df07c9a408da0daf3edcd834, type: 3}
-  m_Name: Move_Slash1
+  m_Name: Boss_Slash2
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
-  moveId: 1
-  stateName: Attack1
+  moveId: 2
+  stateName: Attack2
   speedMultiplier: 1.4
-  measuredLength: 2.033
+  measuredLength: 1.833
   useRootMotion: 1
-  damage: 8
-  postureDamage: 12
-  hitboxOpen: 0.3
-  hitboxClose: 0.467
+  damage: 10
+  postureDamage: 15
+  hitboxOpen: 0.258
+  hitboxClose: 0.419
   iframeStart: 0
   iframeEnd: 0
-  moveEnd: 0.52
-  weaponSocket: To_Hand_R_Socket-Blade
-  endWeaponSocket: To_Hand_R_Socket-Blade
-  cancelWindow: 0.467
-  nextInChain: {fileID: 11400000, guid: 2a86ecb91786cf44680fd00c9e811622, type: 2}
-  chainChance: 1
+  moveEnd: 1
+  weaponSocket: 
+  endWeaponSocket: 
+  cancelWindow: 0.484
+  nextInChain: {fileID: 11400000, guid: 81bd29302fcb46343b6733c927262b74, type: 2}
+  chainChance: 0.5
