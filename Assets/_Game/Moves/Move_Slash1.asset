@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MoveDefinition
   moveId: 1
   stateName: Attack1
-  speedMultiplier: 1.4
+  speedMultiplier: 1.2
   measuredLength: 2.033
   useRootMotion: 1
   damage: 8
