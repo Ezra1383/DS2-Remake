@@ -23,7 +23,9 @@ MonoBehaviour:
   hitboxClose: 0.419
   iframeStart: 0
   iframeEnd: 0
-  moveEnd: 1
+  trackUntil: 0.22
+  trackDegreesPerSecond: 240
+  moveEnd: 0.56
   weaponSocket: 
   endWeaponSocket: 
   cancelWindow: 0.484

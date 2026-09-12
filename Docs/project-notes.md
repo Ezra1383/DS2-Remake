@@ -7,7 +7,7 @@ and decisions taken along the way, so none of it has to be rediscovered.
 is the reference** — environment facts, asset-pack structure, gotchas, and why things are the
 way they are.
 
-Last updated **4 September 2026** (Day 2 of 30). Ship date **3 October 2026**.
+Last updated **12 September 2026** (Day 10 of 30). Ship date **3 October 2026**.
 
 ---
 
@@ -224,6 +224,10 @@ late in the schedule.
 | **UTS toon shader** over URP/Lit | URP/Lit silently kills `SDFFaceShadowController` (its `_UseSDFShadow` / `_FaceForward` properties don't exist on Lit), the outline pass, and the blade matcap. Silhouette readability is mechanical here, not just aesthetic — telegraphs have to read at speed. |
 | Player root = **the character prefab root itself** | The Animator lives there; a separate parent GameObject just fights root motion. |
 | **One `controller.Move()` call**, in `OnAnimatorMove` | Root motion and scripted movement must never both write position in the same frame. A `RootMotionDriven` flag picks the source; `OnAnimatorMove` is also the only point where `animator.deltaPosition` is valid. |
+| Impact feedback is built around **hit stop, sound, camera** and nothing else first | Lin et al. (2022) compared the best and worst action games on "impact feel" across a 19-feature framework; those three were what separated them, and missing any one "may ruin players' impact feel". Particles and flashes are in the framework but did not divide good from bad. Building in that order meant the first pass was narrow instead of a grab-bag. |
+| The camera shakes for the **victim**, not the attacker | It is a mirror match - same clips, same moves, same silhouette - so symmetric feedback makes exchanges unreadable. A small impulse when you connect and a large one when you are hit is the fastest channel for telling the two apart, and it stops the shake becoming exhausting over a ten-death arc. |
+| Boss AI is **authored phrases**, not per-move weighted random | v1 re-rolled one move from a weighted table whenever she became free. Every exchange came out different, so nothing was recognisable and nothing was learnable — and since deaths *are* the progression system here, an unreadable boss makes the whole premise fail. Phrases put the randomness one level up: unpredictable which string you get, fixed what the string does. |
+| The boss **tracks during wind-up, then locks** | Without it her committed root-motion swings whiffed against anyone walking sideways, and exchanges resolved to nothing. The wind-up exists so the player learns dodge *timing*; tracking is what stops "walk away" beating every attack. Per-move, because a lunge and a heavy overhead want different answers. |
 | Lock-on drives the **orbit yaw**, not just `LookAt` | Dark Souls puts the camera on the line from enemy through player. A `CinemachineTargetGroup` alone centres the shot *between* them, which frames both but leaves the camera wherever the player last pointed it. Driving `CinemachineOrbitalFollow.HorizontalAxis.Value` toward the player-to-target yaw is what puts it behind her. Needs Binding Mode = World Space, or the angle is measured against a player who is constantly turning. |
 | **She faces her direction of travel, even locked on** | Forced by the asset — see *No strafe animations* below. |
 | `Humanoid_F_Katana` as the week-1 dummy | No Magica dependency, no toon-shader dependency, same avatar, 30× smaller prefab. |
@@ -256,6 +260,38 @@ reconciliation, animator params) and `LockOnController.cs` (target acquisition, 
 runtime target group). Verified in play: movement, running, lock-on with the camera behind her and
 the dummy ahead, lock breaking on range.
 
-**Next:** `build-plan.md` Step 1.3 — `CombatActor`, `Hitbox`, `Hurtbox`, `PlayerCombat`. This is where
-`RootMotionDriven` and `IsBusy` on `PlayerLocomotion` finally get set, and where the normalized
-hitbox windows on the move assets start being polled.
+**Week 2 — done 5 Sep.** Posture, boss AI v1, reactive dodge.
+
+**Boss AI rewritten 11 Sep (Day 9).** v1's weighted-random-per-move selection read as passive and
+unreadable in play, and tuning its numbers had stopped helping. Replaced with a four-layer brain:
+`BossBrain.cs` (pacing, phrases, reactions, positioning), `BossPhrase.cs` (authored attack
+strings), `BossPerception.cs` (delayed, once-per-swing reactions), `BossDebugHUD.cs` (threat
+density). Full reasoning and the measured causes are in `build-plan.md` Step 2.2. Three things
+worth carrying forward:
+
+- **Randomness belongs at the choice of phrase, not at every action.** A boss that re-rolls a
+  move each time she is free produces a different sequence every exchange and therefore no
+  sequence at all.
+- **Threat density is the metric.** Fraction of time a boss hitbox is open. v1 measured ≈14%;
+  everything else she did was dead air. Never tune boss feel without it on screen.
+- **Probability rolled per frame is not probability.** A 35% dodge chance re-rolled across 26
+  frames of start-up is a 100% dodge chance. `BossPerception` now owns one roll per swing.
+
+**Juice pass built 12 Sep (Day 10),** pulled forward from Days 20-21. `Feel/HitFeedback.cs`,
+`Feel/ImpactAudio.cs`, `Feel/HitFlash.cs`, `Editor/FeelWiring.cs`. Reasoning and numbers in
+`build-plan.md` Step 3.3. Carry forward:
+
+- **`Time.timeScale = 0` makes `Time.deltaTime` 0.** A hit-stop timer on scaled time never ends and
+  the game freezes permanently. Anything counting down through a freeze uses `unscaledDeltaTime`.
+- **Cinemachine Impulse is silent without a listener.** No `CinemachineImpulseListener` on the
+  camera means every impulse is discarded with no error at all. The Arena had none.
+- **UTS needs three colour properties flashed together.** `_BaseColor` lights only the lit region;
+  `_1st_ShadeColor` and `_2nd_ShadeColor` own the shaded bands and are not derived from it. Tint
+  just the base and half the character stays dark, which reads as a rendering bug.
+- **No VFX Graph, no Shader Graph** in the manifest - built-in Particle System only.
+
+**Next:** validate the boss rewrite in play with `BossDebugHUD` on — threat density 20-25%, no
+quiet stretch over 3 s, reactive dodge firing on 25-35% of swings rather than all of them. Then
+`build-plan.md` Step 2.3, telegraphs and the first real playtest. Delete `BossAI.cs` once the
+rewrite is proven (`BossWiring.cs` references the type to strip it off the prefab, so that
+reference goes at the same time).

@@ -88,6 +88,13 @@ namespace DS2
         MoveDefinition lastMove;
         float nextDodgeAt;
 
+        // One roll per swing, not one per frame. Rolling inside Update meant the 0.35 chance was
+        // re-tested every frame of the player's start-up - about 26 frames for Slash 1 - so the
+        // real dodge rate was 1 - 0.65^26, effectively 100%. She evaded nearly every swing and
+        // spent the fight 3 m away walking back in.
+        MoveDefinition rolledAgainst;
+        bool rolledThisSwing;
+
         readonly System.Collections.Generic.Dictionary<MoveDefinition, float> readyAt = new();
 
         void Awake()
@@ -153,11 +160,21 @@ namespace DS2
         bool TryReactiveDodge(float distance)
         {
             if (moveset == null || playerActor == null) return false;
-            if (Time.time < nextDodgeAt || distance > dodgeRange) return false;
 
             MoveDefinition threat = playerActor.CurrentMove;
+            if (threat != rolledAgainst)
+            {
+                rolledAgainst = threat;
+                rolledThisSwing = false;
+            }
+
             if (threat == null || !threat.HasHitbox) return false;
             if (playerActor.MoveProgress >= threat.hitboxOpen) return false;
+
+            if (rolledThisSwing) return false;
+            if (Time.time < nextDodgeAt || distance > dodgeRange) return false;
+
+            rolledThisSwing = true;
             if (Random.value >= reactiveDodgeChance) return false;
 
             // Backpedal when crowded, sidestep otherwise.

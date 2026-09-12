@@ -60,6 +60,20 @@ namespace DS2
         [Range(0f, 1f)] public float iframeStart;
         [Range(0f, 1f)] public float iframeEnd;
 
+        [Header("Tracking")]
+        [Tooltip("Normalized point where facing LOCKS. Until then the actor keeps turning toward " +
+                 "its target at the rate below. This is what makes a dodge a timing decision " +
+                 "rather than a walk-away: with no tracking at all, every committed swing whiffs " +
+                 "against a player who is simply moving sideways, and the exchange resolves to " +
+                 "nothing. Usually a little before hitboxOpen.")]
+        [Range(0f, 1f)] public float trackUntil = 0.25f;
+
+        [Tooltip("Degrees per second of turn during that window. 0 is a fully committed swing " +
+                 "that cannot correct at all - FromSoft splits exactly this distinction into " +
+                 "spinning and non-spinning attacks. Player moves sit at 0 so input stays in " +
+                 "charge of where a swing points.")]
+        public float trackDegreesPerSecond;
+
         [Header("Trim")]
         [Tooltip("Normalized point where the move is considered over and control returns. 1 plays " +
                  "the whole clip. Lower it to cut dead recovery: these clips are full draw-cut-" +
@@ -79,6 +93,28 @@ namespace DS2
                  "through and will sheathe the blade whether you asked or not, so this is what " +
                  "actually keeps it drawn between attacks.")]
         public string endWeaponSocket;
+
+        [Header("Feel")]
+        [Tooltip("Whoosh played as the move starts. This is also the Step 2.3 TELEGRAPH - the " +
+                 "build plan calls a distinct audio cue per move the cheapest, largest-effect " +
+                 "tell available, and since no new animation can be authored it is most of what " +
+                 "the player has to read an attack by. Optional; silence is never an error.")]
+        public AudioClip swingSound;
+
+        [Tooltip("When the whoosh fires, as normalized time. Normalized for the same reason every " +
+                 "other window here is: the global 1.4x tempo would slide a fixed offset out of " +
+                 "sync with the animation. Keep it below hitboxOpen so it reads as a wind-up.")]
+        [Range(0f, 1f)] public float swingSoundNormalized = 0.12f;
+
+        [Tooltip("Optional. Overrides the shared impact bank when this move should sound unique.")]
+        public AudioClip impactSound;
+
+        [Tooltip("Seconds of hit stop this move causes. 0 derives it from damage, which is " +
+                 "usually what you want.")]
+        public float hitstopOverride;
+
+        [Tooltip("Camera trauma, 0-1. 0 derives it from damage and from who got hit.")]
+        [Range(0f, 1f)] public float traumaOverride;
 
         [Header("Cancelling")]
         [Tooltip("Earliest normalized time an input may cancel this move into nextInChain. " +
@@ -111,6 +147,11 @@ namespace DS2
         /// changing speedMultiplier can never desync the animation from the timing windows.
         /// </summary>
         public float Duration => speedMultiplier > 0.01f ? measuredLength / speedMultiplier : measuredLength;
+
+        /// <summary>Turn rate to apply at normalized time t, or 0 once facing has locked.</summary>
+        public float TrackingAt(float t) => t < trackUntil ? trackDegreesPerSecond : 0f;
+
+        public bool HasSwingSound => swingSound != null;
 
         public bool HasHitbox => hitboxClose > hitboxOpen;
         public bool HasIFrames => iframeEnd > iframeStart;

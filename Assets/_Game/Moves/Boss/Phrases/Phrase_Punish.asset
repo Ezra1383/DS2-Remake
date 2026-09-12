@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 600085681c47bce40ab0ea6b0c23d02c, type: 3}
+  m_Name: Phrase_Punish
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.BossPhrase
+  phraseName: Punish
+  steps:
+  - move: {fileID: 11400000, guid: eca80ff1774297d4b8d44c42f591ca43, type: 2}
+    gapAfter: 0.05
+    linkInCancel: 0
+    endOverride: 0
+    continueChance: 0.8
+    breakRange: 0
+  - move: {fileID: 11400000, guid: f5abda541d7396141b38ceeb648ec431, type: 2}
+    gapAfter: 0
+    linkInCancel: 0
+    endOverride: 1
+    continueChance: 1
+    breakRange: 0
+  weight: 0
+  minRange: 0
+  maxRange: 3
+  cooldown: 0
+  extraPressureCost: 1

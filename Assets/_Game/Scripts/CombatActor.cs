@@ -49,6 +49,13 @@ namespace DS2
         public float MoveProgress =>
             CurrentMove != null ? Mathf.Clamp01(moveTimer / CurrentMove.Duration) : 0f;
 
+        /// <summary>
+        /// True while this actor's hitbox is live - i.e. while it is actually threatening
+        /// something. BossDebugHUD integrates this into threat density, which is the number
+        /// that says whether the fight has pressure or dead air.
+        /// </summary>
+        public bool IsHitboxOpen => hitboxOpen;
+
         /// <summary>Set on every hit taken. On death this is the move that killed you.</summary>
         public MoveDefinition LastDamageSource { get; private set; }
 
@@ -74,6 +81,11 @@ namespace DS2
 
         float moveTimer;
         bool hitboxOpen;
+        bool swingSoundPlayed;
+        float moveEndOverride;
+
+        /// <summary>Where the current move actually ends, honouring a per-execution override.</summary>
+        float CurrentMoveEnd => moveEndOverride > 0f ? moveEndOverride : CurrentMove.moveEnd;
 
         protected Animator Anim => animator;
 
@@ -103,10 +115,25 @@ namespace DS2
                 }
             }
 
+            // The wind-up whoosh, polled exactly like the hitbox and for the same reason: a
+            // normalized window cannot drift against the 1.4x tempo the way a fixed offset would.
+            // This doubles as the move's telegraph.
+            if (!swingSoundPlayed && CurrentMove.HasSwingSound && t >= CurrentMove.swingSoundNormalized)
+            {
+                swingSoundPlayed = true;
+                HitFeedback.Swing(CurrentMove.swingSound, transform.position + Vector3.up,
+                                  CurrentMove.speedMultiplier);
+            }
+
             IsInvulnerable = CurrentMove.HasIFrames &&
                              t >= CurrentMove.iframeStart && t < CurrentMove.iframeEnd;
 
-            if (t >= CurrentMove.moveEnd) EndMove();
+            // Facing tracks the target through the wind-up, then locks. Polled here for the same
+            // reason the hitbox is: it is a normalized window on the move asset, so it can be
+            // dragged while the game runs.
+            if (locomotion != null) locomotion.AttackTracking = CurrentMove.TrackingAt(t);
+
+            if (t >= CurrentMoveEnd) EndMove();
         }
 
         /// <summary>
@@ -114,7 +141,13 @@ namespace DS2
         /// and this is the move it chains into. Returns false when the input should be dropped -
         /// that refusal is what stops mashing.
         /// </summary>
-        public virtual bool TryExecute(MoveDefinition move)
+        /// <param name="endOverride">
+        /// Optional per-execution moveEnd, 0 to use the asset's. The boss spends this on the last
+        /// step of a phrase to play the full draw-cut-sheathe cycle: a long, obvious, deliberate
+        /// recovery that says "I am committed, punish me now". It only reads as a signal because
+        /// the rest of her moves are trimmed.
+        /// </param>
+        public virtual bool TryExecute(MoveDefinition move, float endOverride = 0f)
         {
             if (IsDead || IsStunned || move == null) return false;
 
@@ -126,16 +159,18 @@ namespace DS2
                 if (!canCancel) return false;
             }
 
-            BeginMove(move);
+            BeginMove(move, endOverride);
             return true;
         }
 
-        void BeginMove(MoveDefinition move)
+        void BeginMove(MoveDefinition move, float endOverride)
         {
             CloseHitbox();
 
             CurrentMove = move;
             moveTimer = 0f;
+            moveEndOverride = endOverride;
+            swingSoundPlayed = false;
 
             // The state reads its playback rate from this parameter, so speedMultiplier on the
             // asset is live: change it in the inspector mid-play and the next swing uses it.
@@ -151,6 +186,7 @@ namespace DS2
             {
                 locomotion.IsBusy = true;
                 locomotion.RootMotionDriven = move.useRootMotion;
+                locomotion.AttackTracking = move.TrackingAt(0f);
             }
         }
 
@@ -169,11 +205,13 @@ namespace DS2
 
             CurrentMove = null;
             IsInvulnerable = false;
+            moveEndOverride = 0f;
 
             if (locomotion != null)
             {
                 locomotion.IsBusy = false;
                 locomotion.RootMotionDriven = false;
+                locomotion.AttackTracking = 0f;
             }
         }
 
@@ -187,11 +225,13 @@ namespace DS2
             CloseHitbox();
             CurrentMove = null;
             IsInvulnerable = false;
+            moveEndOverride = 0f;
 
             if (locomotion != null)
             {
                 locomotion.IsBusy = false;
                 locomotion.RootMotionDriven = false;
+                locomotion.AttackTracking = 0f;
             }
         }
 
@@ -202,10 +242,16 @@ namespace DS2
             if (hitbox != null) hitbox.Close();
         }
 
-        /// <summary>Called by a Hitbox that overlapped this actor's Hurtbox.</summary>
-        public virtual void ApplyDamage(int amount, MoveDefinition source, Vector3 fromPosition)
+        /// <summary>
+        /// Called by a Hitbox that overlapped this actor's Hurtbox. Reports what actually
+        /// happened so the feedback layer can tell a landed hit from one the target dodged -
+        /// a successful dodge that produces no sound at all reads as the game failing to notice
+        /// rather than as the player succeeding.
+        /// </summary>
+        public virtual HitResult ApplyDamage(int amount, MoveDefinition source, Vector3 fromPosition)
         {
-            if (IsDead || IsInvulnerable) return;
+            if (IsDead) return HitResult.NoEffect;
+            if (IsInvulnerable) return HitResult.Evaded;
 
             int dealt = Mathf.RoundToInt(amount * DamageTakenMultiplier);
             Health = Mathf.Max(0, Health - dealt);
@@ -216,8 +262,14 @@ namespace DS2
 
             Damaged?.Invoke(this, source);
 
-            if (Health == 0) Die();
-            else if (hitReaction != null) hitReaction.Play(fromPosition);
+            if (Health == 0)
+            {
+                Die();
+                return HitResult.Killed;
+            }
+
+            if (hitReaction != null) hitReaction.Play(fromPosition);
+            return HitResult.Damaged;
         }
 
         protected virtual void Die()

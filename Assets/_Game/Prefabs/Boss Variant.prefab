@@ -101,10 +101,16 @@ PrefabInstance:
       addedObject: {fileID: 3628228208150495049}
     - targetCorrespondingSourceObject: {fileID: 8441211572978308132, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8664269507981158187}
+      addedObject: {fileID: 4016546171302995007}
     - targetCorrespondingSourceObject: {fileID: 8441211572978308132, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4016546171302995007}
+      addedObject: {fileID: 4588274264033194144}
+    - targetCorrespondingSourceObject: {fileID: 8441211572978308132, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3376264719836694254}
+    - targetCorrespondingSourceObject: {fileID: 8441211572978308132, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 315300069968354658}
   m_SourcePrefab: {fileID: 100100000, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
 --- !u!1 &5153727532687383092 stripped
 GameObject:
@@ -130,33 +136,6 @@ MonoBehaviour:
   hasDirectionalClips: 0
   gravity: -25
   groundedStick: -2
---- !u!114 &8664269507981158187
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5153727532687383092}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bf9631afa17ddb4eae70f2cee596c23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DS2.BossAI
-  player: {fileID: 0}
-  slash1: {fileID: 0}
-  quickShiftF: {fileID: 0}
-  quickShiftB: {fileID: 0}
-  skill1: {fileID: 0}
-  skill2: {fileID: 0}
-  closeRange: 2.5
-  midRange: 5
-  stopDistance: 1.8
-  maxChainLength: 3
-  neutralGap: 0.8
-  whiffPunishChance: 0.3
-  betweenAttacks: 0.4
-  patience: 4
-  logDecisions: 0
 --- !u!114 &4016546171302995007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -175,3 +154,74 @@ MonoBehaviour:
   stunDuration: 2.5
   stunDamageMultiplier: 2
   logPosture: 0
+--- !u!114 &4588274264033194144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5153727532687383092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ddf68e289f042b419f7263d13c957e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.BossPerception
+  reactionDelay: 0.25
+  reactionJitter: 0.08
+  approachSampleTime: 0.35
+  approachThreshold: 0.6
+--- !u!114 &3376264719836694254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5153727532687383092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ea60994c05dc7c43910d39cf807cd2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.BossBrain
+  player: {fileID: 0}
+  phrases:
+  - {fileID: 11400000, guid: aff16ff29ad24694b84e1a9d218d6887, type: 2}
+  - {fileID: 11400000, guid: ea90862e8834e854faf20f9faaa9e101, type: 2}
+  - {fileID: 11400000, guid: 064025f5a7adb534a924c1993dcd5854, type: 2}
+  - {fileID: 11400000, guid: 962ab70a074832a4c90901704297c9af, type: 2}
+  - {fileID: 11400000, guid: 3135eded779daf240bbc83bf41f5d2ba, type: 2}
+  punishPhrase: {fileID: 11400000, guid: 3135eded779daf240bbc83bf41f5d2ba, type: 2}
+  moveset: {fileID: 11400000, guid: fec369d3f152d3c4ba407ab4086b68db, type: 2}
+  pressureBudget: 4
+  maxAttacksBeforeGap: 3
+  neutralGap: 0.85
+  pressureRefundPerSecond: 2.2
+  retreatDuringGap: 0
+  preferredRange: 2.45
+  rangeTolerance: 0.35
+  runBeyond: 4.5
+  patience: 3.2
+  dodgeChance: 0.25
+  dodgeRange: 3.5
+  dodgeCooldown: 2.5
+  punishChance: 0.35
+  punishCooldown: 3
+  logDecisions: 0
+--- !u!114 &315300069968354658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5153727532687383092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fa076a62c671742b8ff3d96de1d1f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.BossDebugHUD
+  boss: {fileID: 0}
+  player: {fileID: 0}
+  visible: 1
+  toggleKey: 94
+  window: 10
+  threatDensityTarget: 0.2
+  maxQuietTarget: 3

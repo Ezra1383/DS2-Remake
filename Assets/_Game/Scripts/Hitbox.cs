@@ -60,11 +60,31 @@ namespace DS2
             int damage = Mathf.RoundToInt(
                 move.damage * (owner != null ? owner.DamageDealtMultiplier : 1f));
 
-            victim.ApplyDamage(damage, move, owner != null ? owner.transform.position : transform.position);
+            Vector3 from = owner != null ? owner.transform.position : transform.position;
+            HitResult result = victim.ApplyDamage(damage, move, from);
 
             // Posture is boss-only, so most targets have no PostureSystem and that is fine.
-            if (victim.TryGetComponent(out PostureSystem posture))
-                posture.Add(move.postureDamage);
+            victim.TryGetComponent(out PostureSystem posture);
+            if (posture != null && result == HitResult.Damaged) posture.Add(move.postureDamage);
+
+            HitFeedback.Report(new HitInfo
+            {
+                attacker = owner,
+                victim = victim,
+                move = move,
+
+                // The real contact point, not the attacker's feet - VFX and the camera impulse
+                // both want to originate where the blade actually met the body.
+                point = other.ClosestPoint(transform.position),
+
+                damage = damage,
+                result = result,
+                victimIsPlayer = victim.GetComponent<PlayerCombat>() != null,
+
+                // Read AFTER the posture hit lands, so the rising-pitch cue reflects where the
+                // meter is now rather than where it was a moment ago.
+                victimPosture = posture != null ? posture.Normalized : 0f,
+            });
         }
     }
 }

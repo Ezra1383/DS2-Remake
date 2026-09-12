@@ -70,6 +70,13 @@ namespace DS2
         /// <summary>True while a committed action owns the character. Blocks steering and turning.</summary>
         public bool IsBusy { get; set; }
 
+        /// <summary>
+        /// Degrees per second this actor may still turn toward FaceTarget while a move is
+        /// playing. Written every frame by CombatActor from the active move's tracking window,
+        /// and 0 once that window closes - which is the moment the swing is truly committed.
+        /// </summary>
+        public float AttackTracking { get; set; }
+
         protected virtual void Awake()
         {
             controller = GetComponent<CharacterController>();
@@ -90,23 +97,40 @@ namespace DS2
 
         void UpdateRotation(Vector3 desired)
         {
-            // While a move plays the animation owns facing - turning mid-swing feels wrong
-            // and would fight the rotation curve baked into the clip.
-            if (IsBusy) return;
+            // While a move plays, steering is gone but facing is not necessarily frozen: an
+            // attack may keep tracking its target through its wind-up and then lock. Without
+            // that window a committed swing cannot correct at all, so anyone who keeps walking
+            // is never hit and the fight reads as two people missing each other.
+            if (IsBusy)
+            {
+                if (AttackTracking > 0f) TurnToward(FaceTarget, AttackTracking);
+                return;
+            }
 
             // Holding facing at a target only works when there is a clip for every direction.
             // Without them, turning to face travel is the lesser evil.
             bool holdFacing = FaceTarget != null &&
                               (hasDirectionalClips || desired.sqrMagnitude < 0.0001f);
 
-            Vector3 face = holdFacing ? FaceTarget.position - transform.position : desired;
-            face.y = 0f;
-            if (face.sqrMagnitude < 0.0001f) return;
+            if (holdFacing) TurnToward(FaceTarget, rotationSpeed);
+            else TurnToward(desired, rotationSpeed);
+        }
+
+        void TurnToward(Transform target, float degreesPerSecond)
+        {
+            if (target == null) return;
+            TurnToward(target.position - transform.position, degreesPerSecond);
+        }
+
+        void TurnToward(Vector3 direction, float degreesPerSecond)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f) return;
 
             transform.rotation = Quaternion.RotateTowards(
                 transform.rotation,
-                Quaternion.LookRotation(face, Vector3.up),
-                rotationSpeed * Time.deltaTime);
+                Quaternion.LookRotation(direction, Vector3.up),
+                degreesPerSecond * Time.deltaTime);
         }
 
         void UpdateAnimator(Vector3 desired)

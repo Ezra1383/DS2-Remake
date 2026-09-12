@@ -38,6 +38,7 @@ namespace DS2.EditorTools
         };
         const string MovesFolder = "Assets/_Game/Moves";
         const string BossMovesFolder = "Assets/_Game/Moves/Boss";
+        const string BossPhraseFolder = "Assets/_Game/Moves/Boss/Phrases";
         const string ControllerPath = "Assets/_Game/Animation/KG_Combat.controller";
 
         /// <summary>
@@ -90,6 +91,27 @@ namespace DS2.EditorTools
 
             public float End => end > 0f ? end : 1f;
 
+            /// <summary>
+            /// The boss used to run every move at moveEnd = 1, on the theory that the full
+            /// draw-cut-sheathe cycle telegraphs commitment. Measured, that made a three-slash
+            /// chain 5.18 s long containing 0.72 s of live hitbox - the fight was 86% dead air.
+            /// She now gets the player's trims plus a beat, and the full sheathe is spent only
+            /// where a phrase asks for it, which is what turns it back into a signal.
+            /// </summary>
+            public float BossEnd => Mathf.Clamp01(End + 0.06f);
+
+            /// <summary>Normalized point where facing locks. Left at 0, a sensible default is used.</summary>
+            public float trackUntil;
+
+            /// <summary>
+            /// Degrees per second the BOSS may turn during that window. The player stays at 0 -
+            /// their swings point where the stick pointed, and taking that away would feel like
+            /// the game steering for them.
+            /// </summary>
+            public float bossTrack;
+
+            public float TrackUntil => trackUntil > 0f ? trackUntil : 0.25f;
+
             /// <summary>Socket at move start, and at move end. Empty leaves the clip in charge.</summary>
             public string socket, endSocket;
 
@@ -100,35 +122,35 @@ namespace DS2.EditorTools
         // speedMultiplier is derived from measured/duration, never hand-typed.
         static readonly Spec[] Specs =
         {
-            new Spec { id = MoveId.Slash1, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
+            new Spec { id = MoveId.Slash1, trackUntil = 0.26f, bossTrack = 240f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
                        damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2, chain = 1.0f },
-            new Spec { id = MoveId.Slash2, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
+            new Spec { id = MoveId.Slash2, trackUntil = 0.22f, bossTrack = 240f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
                        damage = 10, posture = 15, hbOpen = 0.258f, hbClose = 0.419f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
-            new Spec { id = MoveId.Slash3, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
+            new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 
-            new Spec { id = MoveId.Evade, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Evade", clip = "Evade", measured = 1.467f,
+            new Spec { id = MoveId.Evade, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Evade", clip = "Evade", measured = 1.467f,
                        ifStart = 0.083f, ifEnd = 0.633f, cancel = 0.700f },
 
-            new Spec { id = MoveId.QuickShiftF, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
+            new Spec { id = MoveId.QuickShiftF, trackUntil = 0.12f, bossTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
-            new Spec { id = MoveId.QuickShiftB, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_B", clip = "Quickshift_B", measured = 1f,
+            new Spec { id = MoveId.QuickShiftB, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_B", clip = "Quickshift_B", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
-            new Spec { id = MoveId.QuickShiftL, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_L", clip = "Quickshift_L", measured = 1f,
+            new Spec { id = MoveId.QuickShiftL, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_L", clip = "Quickshift_L", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
-            new Spec { id = MoveId.QuickShiftR, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_R", clip = "Quickshift_R", measured = 1f,
+            new Spec { id = MoveId.QuickShiftR, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_R", clip = "Quickshift_R", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
 
             // Vulnerable throughout - no hitbox, no i-frames. That is the cost of the stance.
-            new Spec { id = MoveId.Draw,    state = "Take", clip = "Take", measured = 1.733f, cancel = 1f },
-            new Spec { id = MoveId.Sheathe, state = "Put",  clip = "Put",  measured = 1.667f, cancel = 1f },
+            new Spec { id = MoveId.Draw, trackUntil = 0.10f, bossTrack = 0f,    state = "Take", clip = "Take", measured = 1.733f, cancel = 1f },
+            new Spec { id = MoveId.Sheathe, trackUntil = 0.10f, bossTrack = 0f, state = "Put",  clip = "Put",  measured = 1.667f, cancel = 1f },
 
-            new Spec { id = MoveId.Skill1, end = 0.93f, state = "Sp_Skill1", clip = "Sp_Skill1", measured = 3.200f,
+            new Spec { id = MoveId.Skill1, trackUntil = 0.26f, bossTrack = 150f, end = 0.93f, state = "Sp_Skill1", clip = "Sp_Skill1", measured = 3.200f,
                        damage = 18, posture = 30, hbOpen = 0.309f, hbClose = 0.433f, cancel = 1f },
             // Vendor naming inconsistency: state Sp_Skill2 plays clip K_Sp_Skill_2.
-            new Spec { id = MoveId.Skill2, end = 0.93f, state = "Sp_Skill2", clip = "K_Sp_Skill_2", measured = 3.867f,
+            new Spec { id = MoveId.Skill2, trackUntil = 0.28f, bossTrack = 200f, end = 0.93f, state = "Sp_Skill2", clip = "K_Sp_Skill_2", measured = 3.867f,
                        damage = 22, posture = 34, hbOpen = 0.328f, hbClose = 0.483f, cancel = 1f },
-            new Spec { id = MoveId.Skill3, end = 0.85f, state = "Sp_Skill3", clip = "Sp_Skill3", measured = 4.500f,
+            new Spec { id = MoveId.Skill3, trackUntil = 0.28f, bossTrack = 120f, end = 0.85f, state = "Sp_Skill3", clip = "Sp_Skill3", measured = 4.500f,
                        damage = 28, posture = 40, hbOpen = 0.345f, hbClose = 0.483f, cancel = 1f },
         };
 
@@ -179,7 +201,9 @@ namespace DS2.EditorTools
                 move.iframeEnd = s.ifEnd;
                 move.cancelWindow = s.cancel;
                 move.chainChance = s.ChainChance;
-                move.moveEnd = forBoss ? 1f : s.End;
+                move.moveEnd = forBoss ? s.BossEnd : s.End;
+                move.trackUntil = s.TrackUntil;
+                move.trackDegreesPerSecond = forBoss ? s.bossTrack : 0f;
                 move.weaponSocket = forBoss ? "" : s.socket;
                 move.endWeaponSocket = forBoss ? "" : s.endSocket;
 
@@ -258,6 +282,168 @@ namespace DS2.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DS2] Boss moveset: " + list.Count + " entries -> " + path);
+        }
+
+        /// <summary>
+        /// Her phrases: authored attack strings, which is the whole point of the AI rewrite.
+        ///
+        /// The old boss re-rolled one move from a weighted table every time she became free. That
+        /// produces a different sequence every exchange and therefore no sequence at all - nothing
+        /// to recognise, nothing to punish, nothing to learn. Randomness now lives one level up:
+        /// she rolls for a PHRASE, then performs it as written. Which one you get is
+        /// unpredictable; what it does once it starts is not.
+        ///
+        /// Name each one after what it TEACHES, not after the moves in it.
+        /// </summary>
+        readonly struct PhraseStep
+        {
+            public readonly MoveId id;
+            public readonly float gapAfter;
+            public readonly bool linkInCancel;
+            public readonly float endOverride;
+            public readonly float continueChance;
+            public readonly float breakRange;
+
+            public PhraseStep(MoveId id, float gapAfter = 0f, bool linkInCancel = false,
+                              float endOverride = 0f, float continueChance = 1f,
+                              float breakRange = 0f)
+            {
+                this.id = id;
+                this.gapAfter = gapAfter;
+                this.linkInCancel = linkInCancel;
+                this.endOverride = endOverride;
+                this.continueChance = continueChance;
+                this.breakRange = breakRange;
+            }
+        }
+
+        readonly struct PhrasePlan
+        {
+            public readonly string file, name;
+            public readonly float weight, min, max, cooldown, extraPressure;
+            public readonly PhraseStep[] steps;
+
+            public PhrasePlan(string file, string name, float weight, float min, float max,
+                              float cooldown, float extraPressure, params PhraseStep[] steps)
+            {
+                this.file = file; this.name = name;
+                this.weight = weight; this.min = min; this.max = max;
+                this.cooldown = cooldown; this.extraPressure = extraPressure;
+                this.steps = steps;
+            }
+        }
+
+        static readonly PhrasePlan[] Phrases =
+        {
+            // The baseline she opens with. Links inside the cancel window exactly like the player
+            // does, so her combo has the same snap as theirs; the last slash plays its full
+            // sheathe (endOverride 1) as the deliberate "punish me now" window.
+            new PhrasePlan("Phrase_Pressure", "Pressure", 3.0f, 0f, 2.9f, 0f, 0f,
+                new PhraseStep(MoveId.Slash1, linkInCancel: true, continueChance: 1.0f, breakRange: 3.2f),
+                new PhraseStep(MoveId.Slash2, linkInCancel: true, continueChance: 0.55f, breakRange: 3.6f),
+                new PhraseStep(MoveId.Slash3, endOverride: 0.85f)),
+
+            // The same opener with a hole in the middle. This is the contradiction that stops the
+            // player running on autopilot: identical first frames, different rhythm, so the dodge
+            // timing they learned against Pressure gets them hit here.
+            new PhrasePlan("Phrase_Feint", "Feint", 2.0f, 0f, 2.9f, 3f, 0f,
+                new PhraseStep(MoveId.Slash1, gapAfter: 0.85f, continueChance: 1f),
+                new PhraseStep(MoveId.Slash2, linkInCancel: true, continueChance: 0.5f, breakRange: 3.4f),
+                new PhraseStep(MoveId.Slash3, endOverride: 0.85f)),
+
+            // Distance is not safety. Quickshift_F covers 2.85 m, so this arrives already in range.
+            new PhrasePlan("Phrase_GapCloser", "Gap closer", 2.5f, 2.8f, 5.0f, 2.5f, 0f,
+                new PhraseStep(MoveId.QuickShiftF, gapAfter: 0.1f),
+                new PhraseStep(MoveId.Slash1, linkInCancel: true, continueChance: 0.7f, breakRange: 3.2f),
+                new PhraseStep(MoveId.Slash2, endOverride: 0.85f)),
+
+            // Her heaviest read. K_Sp_Skill_2 travels 5.18 m: a huge tell and a huge reward for
+            // seeing it coming, which is why it ends in the full sheathe.
+            new PhrasePlan("Phrase_Committed", "Committed lunge", 1.0f, 2.6f, 5.5f, 8f, 1f,
+                new PhraseStep(MoveId.Skill2, endOverride: 1f)),
+
+            // Weight 0: reachable only by BossBrain catching the player in recovery frames. Being
+            // punished for whiffing should read as a consequence, not a coincidence.
+            new PhrasePlan("Phrase_Punish", "Punish", 0f, 0f, 3.0f, 0f, 1f,
+                // No linkInCancel here: Slash1 chains into Slash2, not Skill1, so the cancel
+                // would be refused and fall back to waiting regardless.
+                new PhraseStep(MoveId.Slash1, gapAfter: 0.05f, continueChance: 0.8f),
+                new PhraseStep(MoveId.Skill1, endOverride: 1f)),
+        };
+
+        [MenuItem("Tools/DS2/Build Boss Phrases")]
+        static void BuildBossPhrases()
+        {
+            Directory.CreateDirectory(Path.GetFullPath(BossPhraseFolder));
+            int written = 0;
+
+            foreach (PhrasePlan plan in Phrases)
+            {
+                string path = BossPhraseFolder + "/" + plan.file + ".asset";
+                var phrase = AssetDatabase.LoadAssetAtPath<BossPhrase>(path);
+                if (phrase == null)
+                {
+                    phrase = ScriptableObject.CreateInstance<BossPhrase>();
+                    AssetDatabase.CreateAsset(phrase, path);
+                }
+
+                var steps = new List<BossPhrase.Step>();
+                bool ok = true;
+
+                foreach (PhraseStep ps in plan.steps)
+                {
+                    var move = AssetDatabase.LoadAssetAtPath<MoveDefinition>(
+                        BossMovesFolder + "/Boss_" + ps.id + ".asset");
+
+                    if (move == null)
+                    {
+                        Debug.LogWarning("[DS2] Boss_" + ps.id +
+                                         " missing - run Build Boss Move Assets first.");
+                        ok = false;
+                        break;
+                    }
+
+                    steps.Add(new BossPhrase.Step
+                    {
+                        move = move,
+                        gapAfter = ps.gapAfter,
+                        linkInCancel = ps.linkInCancel,
+                        endOverride = ps.endOverride,
+                        continueChance = ps.continueChance,
+                        breakRange = ps.breakRange,
+                    });
+                }
+
+                if (!ok) continue;
+
+                phrase.phraseName = plan.name;
+                phrase.steps = steps.ToArray();
+                phrase.weight = plan.weight;
+                phrase.minRange = plan.min;
+                phrase.maxRange = plan.max;
+                phrase.cooldown = plan.cooldown;
+                phrase.extraPressureCost = plan.extraPressure;
+
+                EditorUtility.SetDirty(phrase);
+                written++;
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[DS2] " + written + " boss phrases written to " + BossPhraseFolder);
+        }
+
+        /// <summary>
+        /// The whole boss pipeline in the right order, because getting it wrong fails quietly:
+        /// phrases reference move assets, and wiring references phrases.
+        /// </summary>
+        [MenuItem("Tools/DS2/Rebuild Boss (moves, phrases, wiring)")]
+        static void RebuildBoss()
+        {
+            BuildBossMoves();
+            BuildBossMoveset();
+            BuildBossPhrases();
+            BossWiring.Wire();
         }
 
         [MenuItem("Tools/DS2/Build Combat Animator")]

@@ -23,6 +23,8 @@ MonoBehaviour:
   hitboxClose: 0
   iframeStart: 0.083
   iframeEnd: 0.633
+  trackUntil: 0.1
+  trackDegreesPerSecond: 0
   moveEnd: 1
   weaponSocket: To_Hand_R_Socket-Blade
   endWeaponSocket: To_Hand_R_Socket-Blade
