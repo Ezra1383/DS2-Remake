@@ -13,6 +13,9 @@ namespace DS2
         /// <summary>The target was in invulnerability frames. They dodged it.</summary>
         Evaded,
 
+        /// <summary>The target deflected it. No damage, and the ATTACKER is staggered.</summary>
+        Parried,
+
         Damaged,
         Killed,
     }
@@ -98,6 +101,13 @@ namespace DS2
         [SerializeField] float breakSlowMoDuration = 0.55f;
         [Range(0.05f, 1f)] [SerializeField] float breakSlowMoScale = 0.35f;
         [SerializeField] float breakTrauma = 0.9f;
+
+        [Header("Parry")]
+        [Tooltip("A parry is the biggest thing a player can do on defence, so it freezes hardest " +
+                 "of anything except a posture break. This is the moment the whole mechanic sells " +
+                 "itself on.")]
+        [SerializeField] float parryHitstop = 0.22f;
+        [SerializeField] float parryTrauma = 0.7f;
 
         [Header("Death")]
         [SerializeField] float deathHitstop = 0.2f;
@@ -257,6 +267,18 @@ namespace DS2
 
             if (logHits)
                 Debug.Log($"[HitFeedback] {hit.result} {hit.damage} on {hit.victim?.name} at {hit.point}", this);
+
+            if (hit.result == HitResult.Parried)
+            {
+                Freeze(parryHitstop, "PARRY by " + hit.victim.name);
+                Shake(parryTrauma, hit.point);
+                sfx.PlayParry(hit.point);
+
+                // Flash the ATTACKER, not the victim - the deflection happened to her.
+                if (hit.attacker != null && hit.attacker.TryGetComponent(out HitFlash flash))
+                    flash.Play();
+                return;
+            }
 
             if (hit.result == HitResult.Evaded)
             {

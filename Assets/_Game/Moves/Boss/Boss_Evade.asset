@@ -26,8 +26,13 @@ MonoBehaviour:
   trackUntil: 0.1
   trackDegreesPerSecond: 0
   moveEnd: 1
-  weaponSocket: 
-  endWeaponSocket: 
+  weaponSocket: To_Hand_R_Socket-Blade
+  endWeaponSocket: To_Hand_R_Socket-Blade
+  swingSound: {fileID: 0}
+  swingSoundNormalized: 0.02
+  impactSound: {fileID: 0}
+  hitstopOverride: 0
+  traumaOverride: 0
   cancelWindow: 0.7
   nextInChain: {fileID: 0}
   chainChance: 1

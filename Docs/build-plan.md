@@ -332,7 +332,23 @@ Then play the fight for real, with the full moveset unlocked. Write down what fe
 
 ## Phase 3 — The loop, and the feel (Days 15–21, to 23 Sep)
 
-### Step 3.1 — Progression (Days 15–17)
+### Step 3.1 — Progression (Days 15–17) — **DONE 15 Sep (Day 13), two days early**
+
+`ProgressionManager.cs` + `DeathScreen.cs`. The ladder is the design doc's, unchanged:
+Slash2 → QuickShiftB → Slash3 → QuickShiftF → **Draw** → Skill1 → QuickShiftL → Skill2 →
+QuickShiftR → Skill3. Starting kit is **Slash 1 + Evade + Parry**.
+
+All four resolution rules live in `Resolve()`, kept as a pure function so it can be reasoned about
+without mutating anything. Two things that bit:
+
+- **A move in neither `StartingKit` nor `Ladder` is never unlocked**, so its button silently does
+  nothing. Parry shipped that way and looked like a broken input action.
+- **Duplicate-singleton handling must destroy the COMPONENT, not the GameObject.** A second
+  `ProgressionManager` had landed on the arena root; `Destroy(gameObject)` took the floor and all
+  four walls with it, about half the time, because Awake order between two instances is undefined.
+
+The retry resets **in place** rather than reloading — nothing is destroyed, so every reference and
+event subscription survives, and the two-second budget is met comfortably.
 
 `ProgressionManager.cs`, `DontDestroyOnLoad` singleton.
 
@@ -343,9 +359,53 @@ Then play the fight for real, with the full moveset unlocked. Write down what fe
 
 **Done when:** you can die five times in a row and each death hands you exactly one new move, in an order that reflects what actually killed you.
 
-### Step 3.2 — Stance and specials (Days 18–19)
+### Step 3.2 — Stance and specials (Days 18–19) — **MOSTLY DONE 15 Sep (Day 13)**
 
 Draw/Sheathe via `Take`/`Put`, vulnerable throughout, switching the `Stance` bool and the active locomotion tree. The three Special skills as committed, high-posture moves.
+
+**Reachable now:** hold `Special` (Left Ctrl / LB) + Attack / Dodge / Stance fires Skill 1 / 2 / 3;
+tapping Stance alone toggles the persistent stance. Before this, `PlayerCombat` held no reference to
+any Skill, Draw or Sheathe asset — half the moveset could not be reached whatever the player pressed.
+
+**What `Take` and `Put` actually do** — worth knowing before touching this again. They move the
+**scabbard**, not the blade: the blade sits in `Katana_Close` throughout both. `Put` stows the
+scabbard on her body, `Take` returns it to her left hand. `Idle` and `Sp_Idle` are socket-identical
+(sheathed, scabbard in left hand), and **every attack in the pack is a full draw-cut-sheathe** —
+even `Attack1` starts sheathed and draws 0.075 s in.
+
+`WeaponStance` forces the blade into her right hand every frame so she does not look like she is
+constantly sheathing. That is why Specials used to *pop*: `WeaponStance` stands aside for a move
+with no `endWeaponSocket`, and the clip's frame-0 event slammed the blade back into the scabbard
+mid-move. **There is no blade-sheathing animation in the pack**, so that switch cannot be animated —
+only moved somewhere the player is not watching a swing. Holding Special now sheathes her into the
+iai stance first, and the Special begins from where its animation expects to begin.
+
+**Still open:** the drawn→sheathed switch is instant. A short VFX or sound would cover it; the
+alternative (playing `Put` first, ~0.8 s) would mean waiting before every Special.
+
+### Step 3.2b — Parry (added 15 Sep, a deliberate departure from the design doc)
+
+`combat-design.html` calls "no block, no parry, no shield" **the single most important fact in the
+project** and builds the posture economy on it. Overruled after playtesting: Evade already read as
+defending herself, and a parry now earns the **same** payoff as a posture break — 2 s stun, ×2
+damage — on **its own button** (`F` / RMB / RB), leaving Evade untouched.
+
+- **No parry animation exists.** `Move_Parry` points at the `Evade` state with different data
+  (tempo 2.6, `moveEnd` 0.55) so it reads as a defensive snap. Two assets on one animator state is
+  what `MoveDefinition` is for; the boss already does it.
+- **Window 0.02–0.38 normalized ≈ 0.20 s (~12 frames)**, with **no i-frames** outside it and ~0.10 s
+  of defenceless recovery. That is the entire cost of reaching for it instead of dodging.
+- `parryStart` / `parryEnd` on `Move_Parry.asset` are polled live — **drag them while playing**,
+  then copy the result into the `Specs` table before `Build Move Assets` overwrites them.
+- **`CombatActor.Stagger(seconds, damageMultiplier)` is now the single owner of the stunned state.**
+  Both the posture break and the parry route through it; `PostureSystem` no longer keeps its own
+  stun clock. Two systems owning that is how an actor ends up frozen forever.
+
+**The number to watch:** a parry reaches the same opening that four seconds of sustained pressure
+buys. If parrying becomes strictly better than pressuring, the posture meter stops mattering and
+"aggression is the correct defense" quietly stops being true. The lever is `parryStagger` /
+`parryStaggerDamageMultiplier` on `Hitbox` — keep it hard to *hit*, shrink the payoff, rather than
+narrowing the window.
 
 ### Step 3.3 — The juice pass (Days 20–21) — **PULLED FORWARD, built 12 Sep (Day 10)**
 

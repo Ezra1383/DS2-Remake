@@ -31,6 +31,10 @@ namespace DS2
                  "the game not noticing.")]
         [SerializeField] AudioClip[] evaded = System.Array.Empty<AudioClip>();
 
+        [Tooltip("A deflection. This is the single most rewarding sound in a game with a parry - " +
+                 "bright, metallic, immediate. Worth more care than any other clip here.")]
+        [SerializeField] AudioClip[] parry = System.Array.Empty<AudioClip>();
+
         [Header("Events")]
         [Tooltip("Must be unmistakable and used nowhere else - glass, a bell, a metal snap. It is " +
                  "the single most important sound in the game.")]
@@ -105,6 +109,7 @@ namespace DS2
         }
 
         public void PlayEvaded(Vector3 at) => Play(Pick(evaded), at, 1f);
+        public void PlayParry(Vector3 at) => Play(Pick(parry), at, 1f);
         public void PlayPostureBreak(Vector3 at) => Play(postureBreak, at, 1f);
         public void PlayDeath(Vector3 at) => Play(death, at, 1f);
 

@@ -69,6 +69,8 @@ MonoBehaviour:
   hittableLayers:
     serializedVersion: 2
     m_Bits: 8
+  parryStagger: 2
+  parryStaggerDamageMultiplier: 2
 --- !u!1 &4404780144131733358
 GameObject:
   m_ObjectHideFlags: 0
@@ -388,6 +390,12 @@ MonoBehaviour:
   quickShiftB: {fileID: 11400000, guid: ef9c0c90c0ffd4947a0b8d9af55bf092, type: 2}
   quickShiftL: {fileID: 11400000, guid: fda8eee75347ea04a9afc4809bcf02fb, type: 2}
   quickShiftR: {fileID: 11400000, guid: 2484eeb8fb0551a4f9e9002f28ef4eca, type: 2}
+  parry: {fileID: 11400000, guid: 753913e599412924f89f8683ab72ee28, type: 2}
+  draw: {fileID: 11400000, guid: d21672f04b396f54c8d980ee5dc4ca43, type: 2}
+  sheathe: {fileID: 11400000, guid: 58d5147c0e5419948b3d7a041ec9b2a2, type: 2}
+  skill1: {fileID: 11400000, guid: 3c7abb6d066b8ed40b092ca082ae4a60, type: 2}
+  skill2: {fileID: 11400000, guid: 841ca05956fe1724bb52b9210b2f02eb, type: 2}
+  skill3: {fileID: 11400000, guid: 11a4ed10b3de885468bcdcedc4c870e9, type: 2}
   bufferWindow: 0.2
   directionDeadzone: 0.3
 --- !u!114 &1112027277353868344

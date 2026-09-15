@@ -11,6 +11,10 @@ namespace DS2
         QuickShiftF, QuickShiftB, QuickShiftL, QuickShiftR,
         Draw, Sheathe,
         Skill1, Skill2, Skill3,
+
+        // Appended deliberately: MoveId is serialized by value on every move asset, so inserting
+        // anywhere but the end would silently re-label existing assets.
+        Parry,
     }
 
     /// <summary>
@@ -55,6 +59,14 @@ namespace DS2
         [Header("Hitbox window (normalized)")]
         [Range(0f, 1f)] public float hitboxOpen;
         [Range(0f, 1f)] public float hitboxClose;
+
+        [Header("Parry window (normalized)")]
+        [Tooltip("While inside this window an incoming attack is DEFLECTED rather than taken: no " +
+                 "damage, and the attacker is staggered. Leave at 0 for a move that cannot parry.\n\n" +
+                 "Note this is not invulnerability. Outside the window the move has no defence at " +
+                 "all, which is the entire cost of reaching for a parry instead of a dodge.")]
+        [Range(0f, 1f)] public float parryStart;
+        [Range(0f, 1f)] public float parryEnd;
 
         [Header("Invulnerability window (normalized)")]
         [Range(0f, 1f)] public float iframeStart;
@@ -152,6 +164,8 @@ namespace DS2
         public float TrackingAt(float t) => t < trackUntil ? trackDegreesPerSecond : 0f;
 
         public bool HasSwingSound => swingSound != null;
+
+        public bool HasParry => parryEnd > parryStart;
 
         public bool HasHitbox => hitboxClose > hitboxOpen;
         public bool HasIFrames => iframeEnd > iframeStart;

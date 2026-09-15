@@ -39,8 +39,20 @@ namespace DS2
         public bool IsDead { get; private set; }
         public bool IsInvulnerable { get; private set; }
 
-        /// <summary>Set by PostureSystem while broken. Blocks every action.</summary>
-        public bool IsStunned { get; set; }
+        /// <summary>
+        /// Blocks every action. Driven by Stagger() and its timer - a posture break and a parry
+        /// both route through there, so there is exactly one owner of "is this actor helpless".
+        /// </summary>
+        public bool IsStunned { get; private set; }
+
+        /// <summary>True during a move's parry window. An attack landing here is deflected.</summary>
+        public bool IsParrying { get; private set; }
+
+        /// <summary>Raised when this actor is staggered, with the duration. (actor, seconds)</summary>
+        public event System.Action<CombatActor, float> Staggered;
+
+        /// <summary>Raised when a stagger runs out. PostureSystem uses it to clear the meter.</summary>
+        public event System.Action<CombatActor> StaggerEnded;
 
         /// <summary>The move currently executing, or null when neutral.</summary>
         public MoveDefinition CurrentMove { get; private set; }
@@ -78,8 +90,10 @@ namespace DS2
         static readonly int StanceParam = Animator.StringToHash("Stance");
         static readonly int LocomotionState = Animator.StringToHash("Locomotion");
         static readonly int LocomotionSpecialState = Animator.StringToHash("LocomotionSpecial");
+        static readonly int StunState = Animator.StringToHash("Stun");
 
         float moveTimer;
+        float staggerEndsAt;
         bool hitboxOpen;
         bool swingSoundPlayed;
         float moveEndOverride;
@@ -99,7 +113,13 @@ namespace DS2
 
         protected virtual void Update()
         {
-            if (IsDead || CurrentMove == null) return;
+            if (IsDead) return;
+
+            // Before the early-out below: a staggered actor has no CurrentMove, so timing the
+            // stagger inside the move block would leave it stunned forever.
+            if (staggerEndsAt > 0f && Time.time >= staggerEndsAt) EndStagger();
+
+            if (CurrentMove == null) return;
 
             moveTimer += Time.deltaTime;
             float t = Mathf.Clamp01(moveTimer / CurrentMove.Duration);
@@ -124,6 +144,9 @@ namespace DS2
                 HitFeedback.Swing(CurrentMove.swingSound, transform.position + Vector3.up,
                                   CurrentMove.speedMultiplier);
             }
+
+            IsParrying = CurrentMove.HasParry &&
+                         t >= CurrentMove.parryStart && t < CurrentMove.parryEnd;
 
             IsInvulnerable = CurrentMove.HasIFrames &&
                              t >= CurrentMove.iframeStart && t < CurrentMove.iframeEnd;
@@ -205,6 +228,7 @@ namespace DS2
 
             CurrentMove = null;
             IsInvulnerable = false;
+            IsParrying = false;
             moveEndOverride = 0f;
 
             if (locomotion != null)
@@ -213,6 +237,84 @@ namespace DS2
                 locomotion.RootMotionDriven = false;
                 locomotion.AttackTracking = 0f;
             }
+        }
+
+        /// <summary>
+        /// Back to full, in place. Death is the progression mechanic here, so the retry has a
+        /// two-second budget from killing blow to next attempt - which a scene load cannot meet
+        /// and does not need to. Nothing is destroyed, so every reference and subscription that
+        /// existed before the death still holds afterwards.
+        /// </summary>
+        public virtual void ResetForRetry(Vector3 position, Quaternion rotation)
+        {
+            CloseHitbox();
+
+            Health = maxHealth;
+            IsDead = false;
+            IsStunned = false;
+            IsInvulnerable = false;
+            CurrentMove = null;
+            LastDamageSource = null;
+            DamageTakenMultiplier = 1f;
+            IsParrying = false;
+            staggerEndsAt = 0f;
+            moveTimer = 0f;
+            moveEndOverride = 0f;
+            swingSoundPlayed = false;
+
+            if (locomotion != null)
+            {
+                locomotion.enabled = true;
+                locomotion.IsBusy = false;
+                locomotion.RootMotionDriven = false;
+                locomotion.AttackTracking = 0f;
+                locomotion.MoveDirection = Vector3.zero;
+            }
+
+            // Teleporting a CharacterController needs it off for the write, or it resolves the
+            // move against the collision it is standing in and slides somewhere else.
+            var controller = GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = false;
+            transform.SetPositionAndRotation(position, rotation);
+            if (controller != null) controller.enabled = true;
+
+            animator.SetBool(StanceParam, false);
+            animator.SetFloat(MoveSpeedParam, 1f);
+            animator.CrossFadeInFixedTime(LocomotionState, 0.05f);
+
+            if (TryGetComponent(out PostureSystem posture)) posture.ResetPosture();
+        }
+
+        /// <summary>
+        /// Helpless for a while: drops whatever was executing, plays Stun, blocks every action.
+        ///
+        /// One entry point for both routes to an opening - the posture break and a parry - so
+        /// there is a single owner of the stunned state. Two systems each setting IsStunned and
+        /// each running their own timer is how an actor ends up permanently frozen.
+        /// </summary>
+        public void Stagger(float seconds, float damageMultiplier = 1f)
+        {
+            if (IsDead || seconds <= 0f) return;
+
+            Interrupt();
+            IsStunned = true;
+            DamageTakenMultiplier = damageMultiplier;
+            staggerEndsAt = Time.time + seconds;
+
+            animator.CrossFadeInFixedTime(StunState, 0.08f);
+            Staggered?.Invoke(this, seconds);
+        }
+
+        void EndStagger()
+        {
+            staggerEndsAt = 0f;
+            IsStunned = false;
+            DamageTakenMultiplier = 1f;
+
+            animator.CrossFadeInFixedTime(
+                animator.GetBool(StanceParam) ? LocomotionSpecialState : LocomotionState, blendOut);
+
+            StaggerEnded?.Invoke(this);
         }
 
         /// <summary>
@@ -225,6 +327,7 @@ namespace DS2
             CloseHitbox();
             CurrentMove = null;
             IsInvulnerable = false;
+            IsParrying = false;
             moveEndOverride = 0f;
 
             if (locomotion != null)
@@ -251,6 +354,12 @@ namespace DS2
         public virtual HitResult ApplyDamage(int amount, MoveDefinition source, Vector3 fromPosition)
         {
             if (IsDead) return HitResult.NoEffect;
+
+            // Parry outranks i-frames: a move could carry both windows, and deflecting is the
+            // more interesting outcome. The attacker is staggered by the Hitbox that called this,
+            // which is the only thing holding a reference to them.
+            if (IsParrying) return HitResult.Parried;
+
             if (IsInvulnerable) return HitResult.Evaded;
 
             int dealt = Mathf.RoundToInt(amount * DamageTakenMultiplier);

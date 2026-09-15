@@ -76,6 +76,7 @@ namespace DS2.EditorTools
             public float measured;
             public int damage, posture;
             public float hbOpen, hbClose, ifStart, ifEnd, cancel;
+            public float pStart, pEnd;
             public MoveId chainTo;
 
             /// <summary>Odds an AI continues into chainTo. 0 means "use 1".</summary>
@@ -131,6 +132,28 @@ namespace DS2.EditorTools
 
             new Spec { id = MoveId.Evade, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Evade", clip = "Evade", measured = 1.467f,
                        ifStart = 0.083f, ifEnd = 0.633f, cancel = 0.700f },
+
+            // No parry animation exists in the pack, so this is Evade at nearly double speed,
+            // cut short. Two move assets pointing at one animator state with different data is
+            // exactly what MoveDefinition is for - the boss already does it.
+            //
+            // NOTE there are no i-frames here on purpose: outside the parry window this move has
+            // no defence at all, which is the whole cost of reaching for it instead of dodging.
+            //
+            // WINDOW MATH (Duration = 1.467 / 2.6 = 0.564 s):
+            //   pStart 0.02 -> opens 0.011 s after the press, so a press right on the blade still
+            //                  counts. Do not raise this; a parry that ignores a perfectly timed
+            //                  input feels broken rather than strict.
+            //   pEnd   0.38 -> closes at 0.214 s, giving a 0.203 s window, about 12 frames at 60.
+            //                  Was 0.146 s / 9 frames, which was tighter than Sekiro's deflect
+            //                  while paying out a full posture break.
+            //   end    0.55 -> the move runs 0.310 s, leaving ~0.10 s of defenceless recovery
+            //                  after the window shuts. Widening the window without moving this
+            //                  too would have turned it into a quarter-second of free immunity.
+            new Spec { id = MoveId.Parry, trackUntil = 0.30f, bossTrack = 0f,
+                       socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade",
+                       state = "Evade", clip = "Evade", measured = 1.467f, tempo = 2.6f, end = 0.55f,
+                       pStart = 0.02f, pEnd = 0.38f, cancel = 1f },
 
             new Spec { id = MoveId.QuickShiftF, trackUntil = 0.12f, bossTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
@@ -199,6 +222,8 @@ namespace DS2.EditorTools
                 move.hitboxClose = s.hbClose;
                 move.iframeStart = s.ifStart;
                 move.iframeEnd = s.ifEnd;
+                move.parryStart = s.pStart;
+                move.parryEnd = s.pEnd;
                 move.cancelWindow = s.cancel;
                 move.chainChance = s.ChainChance;
                 move.moveEnd = forBoss ? s.BossEnd : s.End;
@@ -206,6 +231,9 @@ namespace DS2.EditorTools
                 move.trackDegreesPerSecond = forBoss ? s.bossTrack : 0f;
                 move.weaponSocket = forBoss ? "" : s.socket;
                 move.endWeaponSocket = forBoss ? "" : s.endSocket;
+
+                // The wind-up whoosh lands just before the blade starts moving.
+                move.swingSoundNormalized = Mathf.Max(0.02f, s.hbOpen - 0.06f);
 
                 EditorUtility.SetDirty(move);
                 made[s.id] = move;
@@ -224,6 +252,8 @@ namespace DS2.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DS2] " + made.Count + " move assets written to " + MovesFolder);
+
+            ValidateHitboxWindows();
         }
 
         /// <summary>
@@ -444,6 +474,89 @@ namespace DS2.EditorTools
             BuildBossMoveset();
             BuildBossPhrases();
             BossWiring.Wire();
+        }
+
+        /// <summary>
+        /// Cross-checks every hitbox window against the clip's own baked SwitchSocket events.
+        ///
+        /// THIS EXISTS BECAUSE THE BUG IT CATCHES COST A DAY. The windows were taken as
+        /// proportions from combat-design.html, which assumed a tight ~0.6 s attack. The real
+        /// clips are 2-4.5 s draw-cut-sheathe cycles, so those proportions landed the hitbox
+        /// AFTER the blade had already been stowed - on five of the six attacks. The HitBox is
+        /// parented to the katana, so it went into the scabbard with it and registered hits from
+        /// the character's hip, seconds after the swing the player actually watched.
+        ///
+        /// Nothing errored. The only symptom was hits landing at the wrong time. Docs/project-notes
+        /// warned about exactly this ("opening one while the blade is sheathed is a silent bug")
+        /// and it happened anyway, which is why it is a build step now rather than a note.
+        /// </summary>
+        [MenuItem("Tools/DS2/Validate Hitbox Windows")]
+        static void ValidateHitboxWindows()
+        {
+            Dictionary<string, AnimationClip> clips = LoadClips();
+            int bad = 0, checked_ = 0;
+
+            foreach (Spec spec in Specs)
+            {
+                if (spec.hbClose <= spec.hbOpen) continue;          // no hitbox, nothing to check
+                if (!clips.TryGetValue(spec.clip, out AnimationClip clip) || clip == null)
+                {
+                    Debug.LogWarning("[DS2] No clip '" + spec.clip + "' to validate " + spec.id);
+                    continue;
+                }
+
+                checked_++;
+
+                // AnimationEvent.time from a loaded clip is in SECONDS. Note that the times
+                // written in the FBX .meta are NORMALIZED 0-1 - reading those as seconds and
+                // dividing by length again double-normalizes, which is exactly the mistake that
+                // made this validator necessary in the first place. Docs/clip-report.csv is the
+                // authoritative source and lists event times in seconds.
+                float length = clip.length > 0.01f ? clip.length : spec.measured;
+                float held = 0f, sheathed = 1f;
+                bool sawHand = false;
+
+                foreach (AnimationEvent e in clip.events)
+                {
+                    if (e.functionName != "SwitchSocket" || string.IsNullOrEmpty(e.stringParameter))
+                        continue;
+
+                    float n = e.time / length;
+
+                    // add_weapon_r is a RIGHT-HAND bone, not the scabbard - only Katana_Close
+                    // actually stows the blade.
+                    if (!sawHand && e.stringParameter.Contains("To_Hand_R_Socket-Blade"))
+                    {
+                        held = n;
+                        sawHand = true;
+                    }
+                    else if (sawHand && e.stringParameter.Contains("To_Katana_Close-Blade"))
+                    {
+                        sheathed = n;
+                        break;
+                    }
+                }
+
+                bool ok = spec.hbOpen >= held - 0.01f && spec.hbClose <= sheathed + 0.01f;
+                string line = spec.id + " (" + spec.clip + ", " + length.ToString("0.00") +
+                              "s): blade held " +
+                              held.ToString("0.000") + "-" + sheathed.ToString("0.000") +
+                              ", hitbox " + spec.hbOpen.ToString("0.000") + "-" +
+                              spec.hbClose.ToString("0.000");
+
+                if (ok) Debug.Log("[DS2] OK  " + line);
+                else
+                {
+                    bad++;
+                    Debug.LogError("[DS2] HITBOX ON A SHEATHED BLADE  " + line +
+                                   "\nThe HitBox is parented to the katana, so this window swings " +
+                                   "a collider that is inside the scabbard. Move it inside the " +
+                                   "blade-held interval above.");
+                }
+            }
+
+            if (bad == 0) Debug.Log("[DS2] All " + checked_ + " hitbox windows are on a drawn blade.");
+            else Debug.LogError("[DS2] " + bad + " of " + checked_ + " hitbox windows are wrong.");
         }
 
         [MenuItem("Tools/DS2/Build Combat Animator")]

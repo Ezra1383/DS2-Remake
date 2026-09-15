@@ -18,6 +18,15 @@ namespace DS2
     {
         [SerializeField] LayerMask hittableLayers = ~0;
 
+        [Header("Parry")]
+        [Tooltip("Seconds the ATTACKER is staggered when this swing is parried. Matched to the " +
+                 "posture break by design decision: a parry is the skill route to the same " +
+                 "opening that sustained pressure earns.")]
+        [SerializeField] float parryStagger = 2f;
+
+        [Tooltip("Damage taken multiplier while staggered by a parry. Matches the posture break.")]
+        [SerializeField] float parryStaggerDamageMultiplier = 2f;
+
         readonly HashSet<CombatActor> alreadyHit = new();
         Collider trigger;
         CombatActor owner;
@@ -57,25 +66,37 @@ namespace DS2
             if (victim == owner) return;
             if (!alreadyHit.Add(victim)) return;
 
-            int damage = Mathf.RoundToInt(
-                move.damage * (owner != null ? owner.DamageDealtMultiplier : 1f));
+            // Captured up front. Staggering a parried attacker interrupts their move, which calls
+            // back into Close() and nulls the field - so anything read after that point would be
+            // reading the aftermath of this hit rather than the hit itself.
+            CombatActor attacker = owner;
+            MoveDefinition landed = move;
+            Vector3 contact = other.ClosestPoint(transform.position);
 
-            Vector3 from = owner != null ? owner.transform.position : transform.position;
-            HitResult result = victim.ApplyDamage(damage, move, from);
+            int damage = Mathf.RoundToInt(
+                landed.damage * (attacker != null ? attacker.DamageDealtMultiplier : 1f));
+
+            Vector3 from = attacker != null ? attacker.transform.position : transform.position;
+            HitResult result = victim.ApplyDamage(damage, landed, from);
+
+            // Deflected. The victim decided that; only we hold a reference to who swung, so the
+            // stagger is applied from here.
+            if (result == HitResult.Parried && attacker != null)
+                attacker.Stagger(parryStagger, parryStaggerDamageMultiplier);
 
             // Posture is boss-only, so most targets have no PostureSystem and that is fine.
             victim.TryGetComponent(out PostureSystem posture);
-            if (posture != null && result == HitResult.Damaged) posture.Add(move.postureDamage);
+            if (posture != null && result == HitResult.Damaged) posture.Add(landed.postureDamage);
 
             HitFeedback.Report(new HitInfo
             {
-                attacker = owner,
+                attacker = attacker,
                 victim = victim,
-                move = move,
+                move = landed,
 
                 // The real contact point, not the attacker's feet - VFX and the camera impulse
                 // both want to originate where the blade actually met the body.
-                point = other.ClosestPoint(transform.position),
+                point = contact,
 
                 damage = damage,
                 result = result,

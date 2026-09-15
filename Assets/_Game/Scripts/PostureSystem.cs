@@ -39,13 +39,9 @@ namespace DS2
         [SerializeField] bool logPosture;
 
         CombatActor actor;
-        Animator animator;
 
         float posture;
         float lastHitTime = float.NegativeInfinity;
-        float stunEndsAt;
-
-        static readonly int StunState = Animator.StringToHash("Stun");
 
         /// <summary>0-1, for the HUD meter in Week 4.</summary>
         public float Normalized => maxPosture > 0f ? posture / maxPosture : 0f;
@@ -57,18 +53,26 @@ namespace DS2
         void Awake()
         {
             actor = GetComponent<CombatActor>();
-            animator = GetComponent<Animator>();
+            actor.StaggerEnded += OnStaggerEnded;
+        }
+
+        void OnDestroy()
+        {
+            if (actor != null) actor.StaggerEnded -= OnStaggerEnded;
+        }
+
+        void OnStaggerEnded(CombatActor _)
+        {
+            // A parry also staggers, and that one owes nothing to the meter.
+            if (IsStunned) Recover();
         }
 
         void Update()
         {
             if (actor.IsDead) return;
 
-            if (IsStunned)
-            {
-                if (Time.time >= stunEndsAt) Recover();
-                return;
-            }
+            // CombatActor owns the stun clock now; Recover is driven by its StaggerEnded event.
+            if (IsStunned) return;
 
             if (Time.time - lastHitTime < decayDelay) return;
             posture = Mathf.Max(0f, posture - decayPerSecond * Time.deltaTime);
@@ -91,18 +95,21 @@ namespace DS2
         void Break()
         {
             IsStunned = true;
-            stunEndsAt = Time.time + stunDuration;
 
             // Whatever she was doing, she is not doing it any more. Breaking her mid-swing is
             // the reward for pressuring through an attack rather than backing off from it.
-            actor.Interrupt();
-            actor.IsStunned = true;
-            actor.DamageTakenMultiplier = stunDamageMultiplier;
-
-            animator.CrossFadeInFixedTime(StunState, 0.1f);
+            actor.Stagger(stunDuration, stunDamageMultiplier);
 
             if (logPosture) Debug.Log($"[{name}] POSTURE BREAK - stunned {stunDuration}s", this);
             Broken?.Invoke(this);
+        }
+
+        /// <summary>Wipes the meter for a retry. Does not fire Recovered - nothing broke.</summary>
+        public void ResetPosture()
+        {
+            posture = 0f;
+            IsStunned = false;
+            lastHitTime = float.NegativeInfinity;
         }
 
         void Recover()
@@ -110,9 +117,6 @@ namespace DS2
             IsStunned = false;
             posture = 0f;
             lastHitTime = Time.time;
-
-            actor.IsStunned = false;
-            actor.DamageTakenMultiplier = 1f;
 
             if (logPosture) Debug.Log($"[{name}] recovered", this);
             Recovered?.Invoke(this);

@@ -19,8 +19,8 @@ MonoBehaviour:
   useRootMotion: 1
   damage: 18
   postureDamage: 30
-  hitboxOpen: 0.309
-  hitboxClose: 0.433
+  hitboxOpen: 0.095
+  hitboxClose: 0.215
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.26
@@ -28,6 +28,11 @@ MonoBehaviour:
   moveEnd: 0.99
   weaponSocket: 
   endWeaponSocket: 
+  swingSound: {fileID: 0}
+  swingSoundNormalized: 0.035
+  impactSound: {fileID: 0}
+  hitstopOverride: 0
+  traumaOverride: 0
   cancelWindow: 1
   nextInChain: {fileID: 0}
   chainChance: 1

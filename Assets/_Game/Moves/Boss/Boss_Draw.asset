@@ -28,6 +28,11 @@ MonoBehaviour:
   moveEnd: 1
   weaponSocket: 
   endWeaponSocket: 
+  swingSound: {fileID: 0}
+  swingSoundNormalized: 0.02
+  impactSound: {fileID: 0}
+  hitstopOverride: 0
+  traumaOverride: 0
   cancelWindow: 1
   nextInChain: {fileID: 0}
   chainChance: 1

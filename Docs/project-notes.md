@@ -7,7 +7,10 @@ and decisions taken along the way, so none of it has to be rediscovered.
 is the reference** — environment facts, asset-pack structure, gotchas, and why things are the
 way they are.
 
-Last updated **12 September 2026** (Day 10 of 30). Ship date **3 October 2026**.
+Last updated **15 September 2026** (Day 13 of 30). Ship date **3 October 2026**.
+
+**New here? Read §7 “Start here” first** — current state, the menu items to re-run after a pull,
+and what to do next. §8 is the control scheme.
 
 ---
 
@@ -106,7 +109,38 @@ Attack1's events run 0 → 0.616 s; the blade is only in the right hand for part
 **Check the event times before choosing a hitbox window** — opening one while the blade is
 sheathed is a silent bug.
 
-### 2.3 Prefabs
+### 2.3 Animation event times: .meta is NORMALIZED, clip.events is SECONDS
+
+**Learned 15 Sep, the expensive way.** The event times written in an FBX `.meta` are **normalized
+0-1**, not seconds. `AnimationEvent.time` on a *loaded* `AnimationClip` is in **seconds**. Reading
+the `.meta` values as seconds and dividing by clip length double-normalizes them, which makes every
+blade-held interval look about 4x shorter and earlier than it is.
+
+That mistake produced a confident, completely wrong conclusion that five of six hitbox windows were
+firing on a sheathed blade, and a "fix" that moved them all too early and broke the three Specials.
+**The original windows were correct** — every one already sat inside the blade-held interval:
+
+| Clip | Length | Drawn | Swing | Stowed | Hitbox |
+|---|---|---|---|---|---|
+| `Attack1` | 2.033 s | 0.075 | 0.490 | 0.556 | 0.300–0.467 ✓ |
+| `Attack2` | 1.833 s | 0.000 | 0.475 | 0.613 | 0.258–0.419 ✓ |
+| `Attack3` | 2.267 s | 0.000 | 0.369 | 0.794 | 0.289–0.444 ✓ |
+| `Sp_Skill1` | 3.200 s | 0.134 | 0.615 | 0.841 | 0.309–0.433 ✓ |
+| `K_Sp_Skill_2` | 3.867 s | 0.105 | 0.609 | 0.842 | 0.328–0.483 ✓ |
+| `Sp_Skill3` | 4.500 s | 0.147 | 0.692 | 0.751 | 0.345–0.483 ✓ |
+
+**`Docs/clip-report.csv` is the authoritative source** for both clip lengths and event times, and it
+lists events in seconds. It already contained everything needed to get this right.
+
+Socket vocabulary: `To_Hand_R_Socket-Blade` draws, `To_Katana_Close-Blade` stows.
+`To_add_weapon_r-Blade` is **not** a sheathe — `add_weapon_r` is a right-hand bone, and that event
+marks the end of the swing arc.
+
+**`Tools ▸ DS2 ▸ Validate Hitbox Windows`** cross-checks every window against the loaded clip's own
+events and runs automatically at the end of `Build Move Assets`. It is worth keeping precisely
+because it caught this: the windows it rejected were the ones a bad analysis had just written.
+
+### 2.4 Prefabs
 
 | Prefab | Use |
 |---|---|
@@ -124,7 +158,7 @@ otherwise a reimport destroys the gameplay code the same way it reverts the HLSL
 Root of `KatanaGirl_FullBody`: Transform, Animator (`ApplyRootMotion: 1`),
 `Character_Weapon_Controller`, `SDFFaceShadowController`.
 
-### 2.4 Animator
+### 2.5 Animator
 
 `School_Katana_Controller.controller` is a flat **38-state** demo controller, one trigger per clip,
 built for the vendor's button viewer. Not salvageable for gameplay — author `KG_Combat.controller`
@@ -239,6 +273,51 @@ late in the schedule.
 
 ## 7. Status
 
+### Start here
+
+**Day 13 of 30** (15 Sep 2026). Ship **3 Oct**. Running **ahead** of `build-plan.md` — the juice
+pass came in a week early — but Week 4's balance and edge-case days are still fully spoken for.
+
+The fight is playable end to end: move, lock on, chain three slashes, dodge, parry, use all three
+Specials, break her posture, die, learn the move that killed you, retry in under two seconds.
+
+**After a fresh pull, run these in order** (all re-runnable, all overwrite hand edits):
+
+| Menu item | Why |
+|---|---|
+| `Tools ▸ DS2 ▸ Build Move Assets` | Player moves. Ends by running the hitbox-window validator |
+| `Tools ▸ DS2 ▸ Rebuild Boss` | Boss moves, moveset, phrases, and prefab wiring + tuning |
+| `Tools ▸ DS2 ▸ Wire Feel` | `HitFeedback`, impulse source, **impulse listener on the camera** |
+| `Tools ▸ DS2 ▸ Wire Progression` | Player move slots, `ProgressionManager`, `DeathScreen`, duplicate cull |
+
+**Next, in order of value:**
+
+1. **Audio — ~15 clips.** The largest remaining gap by some distance, and research finding #2 of
+   three. The system is built and silent; shopping list in `build-plan.md` Step 3.3. The parry clip
+   matters most — a deflect with no metallic clang is missing most of what makes parrying land.
+2. **The first real playtest.** Step 2.3's actual deliverable and still never done: play the whole
+   arc from a wiped save, write down what feels unfair, **fix nothing yet**.
+3. **HUD** (Step 4, Days 25–26) — player health, boss health, **boss posture**, learned moves. The
+   posture meter especially, now that parry is a second route to breaking her.
+4. **Housekeeping:** delete `BossAI.cs` (dead since the rewrite); strip the five unused Unity
+   template input actions — `Jump` sits on Space and `Crouch` on pad B, both colliding with Dodge.
+
+**Unverified, worth ten minutes each:** does `Committed lunge` ever connect (Skill2 travels 5.18 m
+but is chosen at 2.6–5.5 m, so it may sail straight past)? Does the `Punish` phrase ever fire
+(weight 0, reaction-only)? Is the death slow-motion at 1.2 s too long?
+
+**Debug switches:** `logTimeline` on HitFeedback (names every freeze and its cause), `logDecisions`
+on BossBrain, `logUnlocks` on ProgressionManager, `wipeOnPlay` / `unlockEverything` on
+ProgressionManager, **F1** for the boss HUD.
+
+**Compile without opening Unity:**
+`"C:/Program Files/Unity/Hub/Editor/6000.6.0f1/Editor/Data/DotNetSdk/dotnet.exe" build Assembly-CSharp.csproj`
+— and `Assembly-CSharp-Editor.csproj` separately. New `.cs` files need adding to the `.csproj` by
+hand first; Unity regenerates it, and it is gitignored.
+
+---
+
+
 **Phase 0 — done:** toon shader imported and patched (verified: toon shading, outlines, matcap,
 SDF face shadow tracking under camera orbit); all compile errors cleared; Cinemachine 6.6.0
 installed; `Assets/_Game/{Scripts/Editor,Prefabs,Moves,Animation,Scenes,VFX,Audio}` created;
@@ -290,8 +369,94 @@ worth carrying forward:
   just the base and half the character stays dark, which reads as a rendering bug.
 - **No VFX Graph, no Shader Graph** in the manifest - built-in Particle System only.
 
+**Progression built 15 Sep (Day 13).** `ProgressionManager.cs` (unlock ladder, resolution rules,
+PlayerPrefs), `DeathScreen.cs` (placeholder card + in-place retry), plus the **Special** input
+action. Notes:
+
+- **Starting kit is Slash 1 + Evade + Parry.** The design doc is firm about Evade: with no stamina
+  and no block it is the only defensive verb, and a player without it has no interaction beyond
+  swinging. Parry joined it on 15 Sep as a core verb rather than a reward - putting it on the
+  ladder would make the arc eleven deaths instead of the ten the game is named after.
+  **It has to be in `StartingKit`**: a move that is in neither that array nor the ladder is never
+  unlocked, so its button silently does nothing, which is exactly what happened first time.
+- **Specials: hold `Special` (Left Ctrl / LB) + Attack / Dodge / Stance = Skill 1 / 2 / 3.** Tapping
+  Stance alone takes or leaves the Special stance. Before this, `PlayerCombat` had no reference to
+  any Skill, Draw or Sheathe asset - half the moveset was unreachable whatever you pressed.
+- **The retry resets in place** rather than reloading. The budget is two seconds from killing blow
+  to next attempt, and nothing is destroyed, so every reference and event subscription survives.
+  `CombatActor.ResetForRetry` disables the `CharacterController` around the teleport, or it resolves
+  the move against the collision it is standing in and slides elsewhere.
+- **`DeathScreen.Retry` forces `Time.timeScale = 1`.** The killing blow's slow motion is still
+  running when the card appears; without this the next attempt plays at 30%.
+
+**Parry added 15 Sep (Day 13), as a deliberate departure from the design doc.**
+`combat-design.html` calls "no block, no parry, no shield" the single most important fact in the
+project and builds the posture economy on it. The author's call after playtesting was that Evade
+already reads as defending herself, and that a parry earns the **same** payoff as a posture break
+(2 s stun, x2 damage) on **its own button** (`F` / RMB / RB), leaving Evade untouched.
+
+- **There is no parry animation in the rig.** `Move_Parry` points at the `Evade` state with
+  different data - tempo 2.6, `moveEnd` 0.45 - so it reads as a defensive snap rather than a roll.
+  Two assets on one animator state is what `MoveDefinition` is for; the boss already does it.
+- **No i-frames on the parry, on purpose.** Outside the 0.04-0.30 window (~0.15 s) the move has no
+  defence at all. That is the entire cost of reaching for it instead of dodging.
+- **`CombatActor.Stagger(seconds, damageMultiplier)` is now the single owner of the stunned state.**
+  A posture break and a parry both route through it. `PostureSystem` no longer sets
+  `actor.IsStunned` or runs its own stun clock - two systems each owning that is how an actor ends
+  up permanently frozen.
+- **Watch this number:** a parry now reaches the same opening that four seconds of sustained
+  pressure buys. If parrying becomes strictly better than pressuring, the posture meter stops
+  mattering and "aggression is the correct defense" quietly stops being true. The lever is
+  `Hitbox.parryStagger` / `parryStaggerDamageMultiplier`.
+
+**Singleton duplicates destroyed the arena (found 15 Sep).** The camera drifted away on start,
+intermittently. Cause: a second `ProgressionManager` had ended up on `Arena(Experiment)`, which is
+the **parent of the floor and all four boundary walls**. `Awake` resolved duplicates with
+`Destroy(gameObject)`, and Awake order between two instances of one component is undefined - so
+roughly half the time the loser was the arena root and the floor vanished, dropping both actors
+through the world with the camera following.
+
+Three things changed, and the pattern generalises to any manager added later:
+
+- **Duplicate resolution destroys the COMPONENT, never the GameObject.** That object may own
+  something; `Destroy(this)` cannot take the scene with it.
+- **`DontDestroyOnLoad` is refused on an object with a parent or children**, with a warning. DDoL
+  promotes to root and keeps the whole subtree, so a stray copy would otherwise drag half the
+  scene out of the loaded scene entirely.
+- **`Tools ▸ DS2 ▸ Wire Progression` now culls duplicates** rather than skipping when it finds one,
+  and prefers a dedicated childless root object as the survivor.
+
+`DeathScreen` had the same duplication (two subscribers to `Died`, two overlapping cards, two
+retries per death) and now guards the same way.
+
 **Next:** validate the boss rewrite in play with `BossDebugHUD` on — threat density 20-25%, no
 quiet stretch over 3 s, reactive dodge firing on 25-35% of swings rather than all of them. Then
 `build-plan.md` Step 2.3, telegraphs and the first real playtest. Delete `BossAI.cs` once the
 rewrite is proven (`BossWiring.cs` references the type to strip it off the prefab, so that
 reference goes at the same time).
+
+---
+
+## 8. Controls
+
+From `Assets/InputSystem_Actions.inputactions`. **Extend that asset, never author a second one.**
+
+| Action | Keyboard / Mouse | Gamepad | Notes |
+|---|---|---|---|
+| Move | WASD / arrows | Left stick | Camera-relative |
+| Sprint | Left Shift | L3 | |
+| Attack | Left Mouse | X / □ | Chains via each move's `cancelWindow` |
+| Dodge | Space | B / ○ | Neutral = Evade; with a direction = Quick Shift |
+| **Parry** | **F** / Right Mouse | RB / R1 | ~0.20 s window, no i-frames outside it |
+| Lock on | Q | R3 | |
+| Stance | R | Y / △ | Draw / Sheathe, persistent |
+| **Special** (hold) | **Left Ctrl** | LB / L1 | Also enters the sheathed iai stance |
+
+**Specials:** hold Special, then Attack / Dodge / Stance = **Skill 1 / 2 / 3**. The stance part
+requires **The Draw** unlocked (death 5), which is what the ladder says grants Special stance.
+
+**Meta:** F1 toggles the boss debug HUD; any key retries on the death card.
+
+**Dead template actions still in the asset** — `Look`, `Jump`, `Crouch`, `Interact`, `Previous`,
+`Next`. Nothing reads any of them, but `Jump` is bound to **Space** and `Crouch` to **pad B**,
+colliding with Dodge. Harmless today; strip them before the build.
