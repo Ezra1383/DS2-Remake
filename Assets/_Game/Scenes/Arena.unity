@@ -1817,6 +1817,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1022196387}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1169187353
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1169187355}
+  - component: {fileID: 1169187354}
+  m_Layer: 0
+  m_Name: CombatHUD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1169187354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1169187353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 156a2e952db80094f99b39a6f8eb53e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.CombatHUD
+  player: {fileID: 0}
+  boss: {fileID: 0}
+  bossName: THE MIRROR
+  visible: 1
+  toggleKey: 95
+  referenceHeight: 1080
+  chipCatchUpPerSecond: 55
+  chipDelay: 0.45
+  vignette: 1
+  vignetteStrength: 0.62
+  vignetteFadePerSecond: 1.9
+  hideDelayOnDeath: 0.85
+  hideFadeTime: 0.35
+--- !u!4 &1169187355
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1169187353}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1209210875
 GameObject:
   m_ObjectHideFlags: 0
@@ -1932,8 +1989,12 @@ MonoBehaviour:
     pitchWithPosture: 1
     posturePitchAtFull: 1.35
     voices: 8
-  impactVfx: {fileID: 0}
-  heavyImpactVfx: {fileID: 0}
+  impactVfx: {fileID: 3024872620408206533, guid: 5b80c3b3f63c6054dbf9a90bc659fe99, type: 3}
+  heavyImpactVfx: {fileID: 3378433733017562519, guid: ea7fae5f7b6510744bfdfcbf7fac3adb, type: 3}
+  parryVfx: {fileID: 7298199248383989616, guid: 039c215e3754db24987e4cbbd9bbbb00, type: 3}
+  evadeVfx: {fileID: 0}
+  flashOnEvade: 0
+  evadeFlashColor: {r: 0.55, g: 0.85, b: 1, a: 1}
   logHits: 0
   logTimeline: 0
 --- !u!4 &1209210878
@@ -2354,3 +2415,4 @@ SceneRoots:
   - {fileID: 1209210878}
   - {fileID: 305450535}
   - {fileID: 2111741160}
+  - {fileID: 1169187355}

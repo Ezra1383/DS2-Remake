@@ -26,7 +26,7 @@ MonoBehaviour:
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.24
-  trackDegreesPerSecond: 0
+  trackDegreesPerSecond: 360
   moveEnd: 0.55
   weaponSocket: To_Hand_R_Socket-Blade
   endWeaponSocket: To_Hand_R_Socket-Blade

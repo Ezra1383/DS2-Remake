@@ -106,12 +106,32 @@ namespace DS2.EditorTools
 
             EnsureSingleton<ProgressionManager>("ProgressionManager");
             EnsureSingleton<DeathScreen>("DeathScreen");
+            EnsureSingleton<CombatHUD>("CombatHUD");
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[DS2] Progression wired.");
+        }
+
+        /// <summary>
+        /// Drops the player-facing HUD into the arena. Also reachable through Wire Progression,
+        /// which is what the documented post-pull sequence runs - this exists so the HUD can be
+        /// put back after a scene revert without re-running the prefab half of that.
+        /// </summary>
+        [MenuItem("Tools/DS2/Wire HUD")]
+        static void WireHUD()
+        {
+            Scene scene = EditorSceneManager.GetActiveScene();
+            if (scene.path != ArenaScene)
+                scene = EditorSceneManager.OpenScene(ArenaScene, OpenSceneMode.Single);
+
+            EnsureSingleton<CombatHUD>("CombatHUD");
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[DS2] HUD wired.");
         }
 
         /// <summary>

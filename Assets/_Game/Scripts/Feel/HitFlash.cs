@@ -19,6 +19,9 @@ namespace DS2
     {
         [SerializeField] Color flashColor = Color.white;
 
+        /// <summary>Set for one flash by Play(Color); cleared by the parameterless Play.</summary>
+        Color? colorOverride;
+
         [Tooltip("Seconds. 50-100 ms is the usable band - below about 30 ms it goes unnoticed, " +
                  "above 150 ms it smears and stops reading as an impact.")]
         [SerializeField] float duration = 0.08f;
@@ -98,6 +101,19 @@ namespace DS2
 
         public void Play()
         {
+            colorOverride = null;
+            remaining = duration;
+            Apply(1f);
+        }
+
+        /// <summary>
+        /// Flash in a colour other than this actor's usual one, for one flash. Used to say
+        /// "avoided" in a different voice from "hurt" - the two have to be tellable apart at a
+        /// glance or a dodge reads as the hit failing to register.
+        /// </summary>
+        public void Play(Color color)
+        {
+            colorOverride = color;
             remaining = duration;
             Apply(1f);
         }
@@ -126,10 +142,12 @@ namespace DS2
                 if (target.renderer == null) continue;
 
                 target.renderer.GetPropertyBlock(block);
-                if (target.hasBase) block.SetColor(BaseColor, Color.Lerp(target.baseColor, flashColor, t));
-                if (target.hasColor) block.SetColor(Color1, Color.Lerp(target.color, flashColor, t));
-                if (target.hasShade1) block.SetColor(Shade1, Color.Lerp(target.shade1, flashColor, t));
-                if (target.hasShade2) block.SetColor(Shade2, Color.Lerp(target.shade2, flashColor, t));
+                Color tint = colorOverride ?? flashColor;
+
+                if (target.hasBase) block.SetColor(BaseColor, Color.Lerp(target.baseColor, tint, t));
+                if (target.hasColor) block.SetColor(Color1, Color.Lerp(target.color, tint, t));
+                if (target.hasShade1) block.SetColor(Shade1, Color.Lerp(target.shade1, tint, t));
+                if (target.hasShade2) block.SetColor(Shade2, Color.Lerp(target.shade2, tint, t));
                 target.renderer.SetPropertyBlock(block);
             }
         }

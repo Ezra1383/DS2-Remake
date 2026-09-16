@@ -12,11 +12,41 @@ namespace DS2
     ///
     /// One hit per target per swing: without the hit-set a single slash registers on every physics
     /// frame the collider overlaps, which reads as a one-hit kill.
+    ///
+    /// DETECTION IS A SWEPT OVERLAP QUERY, NOT JUST OnTriggerEnter. The first playtest found two
+    /// failures that are the same root cause:
+    ///
+    /// - A slash visibly passing through her doing nothing. The blade is 0.06 x 0.07 in cross
+    ///   section and travels fast, and it belongs to the character root's compound rigidbody,
+    ///   which is kinematic with DISCRETE collision detection. Physics samples poses 50 times a
+    ///   second; between two samples a thin fast box can be entirely one side of her and then
+    ///   entirely the other. Classic tunnelling.
+    /// - The second slash of a chain doing nothing after the first one hit. OnTriggerEnter fires
+    ///   on ENTRY. At close range the blade is often already inside her hurtbox at the instant the
+    ///   next window opens, so there is no entry to report and the swing registers nothing.
+    ///
+    /// So while the window is open this sub-steps between the previous blade pose and the current
+    /// one, running Physics.OverlapBox at each step. Sub-stepping is what defeats the tunnelling;
+    /// asking "is anything inside right now" rather than "did anything just enter" is what defeats
+    /// the chain case. The trigger callback is kept as well - alreadyHit means whichever path sees
+    /// the target first wins and the other is a no-op - because losing hits entirely would be a
+    /// worse failure than the one being fixed.
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public class Hitbox : MonoBehaviour
     {
         [SerializeField] LayerMask hittableLayers = ~0;
+
+        [Header("Sweep")]
+        [Tooltip("Poses tested between the blade's position last physics step and this one. The " +
+                 "blade is thin and fast enough to pass clean through a target inside one step, " +
+                 "so 1 (test only where it is now) drops hits. Raise it if fast Specials still " +
+                 "pass through; each step is one OverlapBox.")]
+        [Range(1, 12)] [SerializeField] int sweepSubSteps = 5;
+
+        [Tooltip("Logs every sweep hit and which path caught it. Use it to confirm a missed " +
+                 "slash is a detection problem rather than a window that never opened.")]
+        [SerializeField] bool logSweep;
 
         [Header("Parry")]
         [Tooltip("Seconds the ATTACKER is staggered when this swing is parried. Matched to the " +
@@ -28,15 +58,27 @@ namespace DS2
         [SerializeField] float parryStaggerDamageMultiplier = 2f;
 
         readonly HashSet<CombatActor> alreadyHit = new();
+        readonly Collider[] overlaps = new Collider[16];
+
         Collider trigger;
+        BoxCollider box;
         CombatActor owner;
         MoveDefinition move;
+
+        Vector3 lastPos;
+        Quaternion lastRot;
+        bool hasLastPose;
 
         void Awake()
         {
             trigger = GetComponent<Collider>();
+            box = trigger as BoxCollider;
             trigger.isTrigger = true;
             trigger.enabled = false;
+
+            if (box == null)
+                Debug.LogWarning("[Hitbox] Expected a BoxCollider; the sweep will fall back to " +
+                                 "the collider's axis-aligned bounds, which is less accurate.", this);
         }
 
         public void Open(CombatActor attacker, MoveDefinition sourceMove)
@@ -45,18 +87,131 @@ namespace DS2
             move = sourceMove;
             alreadyHit.Clear();
             trigger.enabled = true;
+
+            // Start the sweep from where the blade is NOW. Carrying the pose over from the last
+            // swing would sweep across the gap between them - through anything standing in
+            // between, and across the whole arena after a retry teleport.
+            hasLastPose = false;
         }
 
         public void Close()
         {
+            ReportSwing();
             trigger.enabled = false;
             alreadyHit.Clear();
             move = null;
+            hasLastPose = false;
         }
 
-        void OnTriggerEnter(Collider other)
+        /// <summary>
+        /// The real detection path, and it MUST be LateUpdate.
+        ///
+        /// The frame order is Update -> animation -> OnAnimatorMove -> LateUpdate. The blade is
+        /// posed by the Animator and the actors are moved by controller.Move() inside
+        /// OnAnimatorMove, so anything earlier than LateUpdate - FixedUpdate above all - reads
+        /// both the blade AND the target a full frame stale. Sampling at the physics rate also
+        /// aliases against the animation: above 50 fps whole blade poses are never looked at, and
+        /// below it the same pose is tested twice.
+        ///
+        /// Physics.SyncTransforms is then required rather than optional, because the project has
+        /// m_AutoSyncTransforms OFF: without it the query tests where the colliders were at the
+        /// last physics step, not where they are on screen. That gap is what a player sees as a
+        /// blade passing visibly through her and doing nothing.
+        /// </summary>
+        void LateUpdate()
         {
             if (move == null) return;
+
+            // Push this frame's animation and root motion into the physics scene before asking
+            // it anything. Two characters and an arena - the cost is not the issue it would be
+            // in a populated scene.
+            Physics.SyncTransforms();
+
+            Vector3 pos = transform.position;
+            Quaternion rot = transform.rotation;
+
+            if (!hasLastPose)
+            {
+                lastPos = pos;
+                lastRot = rot;
+                hasLastPose = true;
+            }
+
+            int steps = Mathf.Max(1, sweepSubSteps);
+            for (int i = 1; i <= steps; i++)
+            {
+                float k = (float)i / steps;
+                SweepAt(Vector3.Lerp(lastPos, pos, k), Quaternion.Slerp(lastRot, rot, k));
+            }
+
+            lastPos = pos;
+            lastRot = rot;
+        }
+
+        /// <summary>
+        /// Says whether a swing that ended found anything, and how close it came. This is the
+        /// difference between "the window never opened" and "the window opened and missed" -
+        /// guessing between those two is how a hitbox bug eats an afternoon.
+        /// </summary>
+        void ReportSwing()
+        {
+            if (!logSweep) return;
+
+            string who = owner != null ? owner.name : "?";
+            string what = move != null ? move.moveId.ToString() : "?";
+
+            if (alreadyHit.Count > 0)
+            {
+                Debug.Log($"[Hitbox] {who} {what}: CONNECTED ({alreadyHit.Count}).", this);
+                return;
+            }
+
+            float nearest = float.PositiveInfinity;
+            foreach (Hurtbox h in FindObjectsByType<Hurtbox>(FindObjectsSortMode.None))
+            {
+                if (h.Owner == null || h.Owner == owner) continue;
+                nearest = Mathf.Min(nearest, Vector3.Distance(h.transform.position, transform.position));
+            }
+
+            Debug.Log($"[Hitbox] {who} {what}: window opened and closed with NO hit. " +
+                      $"Nearest hurtbox was {nearest:0.00} m from the blade.", this);
+        }
+
+        void SweepAt(Vector3 pos, Quaternion rot)
+        {
+            Vector3 scale = transform.lossyScale;
+            Vector3 half, centerOffset;
+
+            if (box != null)
+            {
+                half = Vector3.Scale(box.size * 0.5f, scale);
+                centerOffset = Vector3.Scale(box.center, scale);
+            }
+            else
+            {
+                half = trigger.bounds.extents;
+                centerOffset = Vector3.zero;
+            }
+
+            Vector3 center = pos + rot * centerOffset;
+
+            int count = Physics.OverlapBoxNonAlloc(
+                center, half, overlaps, rot, hittableLayers, QueryTriggerInteraction.Collide);
+
+            for (int i = 0; i < count; i++)
+            {
+                if (logSweep && overlaps[i] != null)
+                    Debug.Log("[Hitbox] sweep touched " + overlaps[i].name, this);
+
+                TryHit(overlaps[i]);
+            }
+        }
+
+        void OnTriggerEnter(Collider other) => TryHit(other);
+
+        void TryHit(Collider other)
+        {
+            if (move == null || other == null) return;
             if ((hittableLayers.value & (1 << other.gameObject.layer)) == 0) return;
 
             var hurtbox = other.GetComponent<Hurtbox>();
@@ -78,6 +233,16 @@ namespace DS2
 
             Vector3 from = attacker != null ? attacker.transform.position : transform.position;
             HitResult result = victim.ApplyDamage(damage, landed, from);
+
+            // The result is the whole diagnosis. "Connected" is not the same as "damaged":
+            // Evaded means i-frames ate it, Parried means it was deflected, NoEffect means the
+            // target was already dead. Without this, every one of those looks identical to a
+            // hitbox that never fired.
+            if (logSweep)
+                Debug.Log($"[Hitbox] {(attacker != null ? attacker.name : "?")} " +
+                          $"{landed.moveId} -> {victim.name}: {result}, dmg={damage}, " +
+                          $"victim i-frames={victim.IsInvulnerable}, parrying={victim.IsParrying}",
+                          this);
 
             // Deflected. The victim decided that; only we hold a reference to who swung, so the
             // stagger is applied from here.

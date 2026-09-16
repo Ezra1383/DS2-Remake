@@ -215,23 +215,7 @@ namespace DS2
             GUI.Label(line4, "<i>any key to go again</i>   ·   attempt " + attempts, small);
         }
 
-        /// <summary>Move names as the player should read them, not as the enum spells them.</summary>
-        static string Pretty(MoveId id) => id switch
-        {
-            MoveId.Slash1 => "Slash 1",
-            MoveId.Slash2 => "Slash 2",
-            MoveId.Slash3 => "Slash 3",
-            MoveId.Evade => "Evade",
-            MoveId.QuickShiftF => "Quick Shift — Forward",
-            MoveId.QuickShiftB => "Quick Shift — Back",
-            MoveId.QuickShiftL => "Quick Shift — Left",
-            MoveId.QuickShiftR => "Quick Shift — Right",
-            MoveId.Draw => "The Draw",
-            MoveId.Sheathe => "Sheathe",
-            MoveId.Skill1 => "Skill 1",
-            MoveId.Skill2 => "Skill 2",
-            MoveId.Skill3 => "Skill 3",
-            _ => id.ToString(),
-        };
+        /// <summary>Shared with the HUD so the card and the learned-moves list never disagree.</summary>
+        static string Pretty(MoveId id) => MoveDefinition.DisplayName(id);
     }
 }

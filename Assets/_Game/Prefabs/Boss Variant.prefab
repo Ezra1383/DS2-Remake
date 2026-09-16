@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: hittableLayers.m_Bits
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 2710959209255289286, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
+      propertyPath: telegraph
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4404780144131733358, guid: 0ab1252076356364d95081c5126ef0ff, type: 3}
       propertyPath: m_Layer
       value: 3
@@ -134,6 +138,7 @@ MonoBehaviour:
   acceleration: 12
   rotationSpeed: 540
   hasDirectionalClips: 0
+  holdFacingMaxAngle: 40
   gravity: -25
   groundedStick: -2
 --- !u!114 &4016546171302995007
@@ -201,6 +206,7 @@ MonoBehaviour:
   runBeyond: 4.5
   patience: 3.2
   dodgeChance: 0.25
+  sidestepChance: 0
   dodgeRange: 3.5
   dodgeCooldown: 2.5
   punishChance: 0.35

@@ -78,6 +78,12 @@ namespace DS2
         /// <summary>The ladder in order, for a HUD's learned-moves list.</summary>
         public static IReadOnlyList<MoveId> LadderOrder => Ladder;
 
+        /// <summary>
+        /// What she starts with. The HUD lists these above the ladder so the panel's row count
+        /// equals TotalCount - otherwise "3 of 13" is drawn next to ten rows and reads as a bug.
+        /// </summary>
+        public static IReadOnlyList<MoveId> StartingMoves => StartingKit;
+
         void Awake()
         {
             if (Instance != null && Instance != this)

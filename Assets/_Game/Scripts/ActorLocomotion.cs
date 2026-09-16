@@ -38,6 +38,15 @@ namespace DS2
                  "DirectionalLocomotion in CombatSetupTools.")]
         [SerializeField] protected bool hasDirectionalClips;
 
+        [Tooltip("Max angle between travel and the lock-on target that still keeps her facing " +
+                 "the target rather than her direction of travel. Walking roughly at her holds " +
+                 "aim; striding sideways or backing off turns her, because THAT is where a " +
+                 "forward walk across a sideways translation reads as skating. Widening this " +
+                 "buys aim and costs foot slide. 0 restores the old face-travel-whenever-moving " +
+                 "behaviour.")]
+        [Range(0f, 90f)]
+        [SerializeField] protected float holdFacingMaxAngle = 40f;
+
         [Header("Gravity")]
         [SerializeField] protected float gravity = -25f;
         [SerializeField] protected float groundedStick = -2f;
@@ -108,12 +117,35 @@ namespace DS2
             }
 
             // Holding facing at a target only works when there is a clip for every direction.
-            // Without them, turning to face travel is the lesser evil.
+            // Without them, turning to face travel is the lesser evil - but only once she is
+            // really striding. Below the deadzone there is not enough foot travel for the
+            // mismatch to show, and those small adjustment steps are precisely when the player
+            // is lining a swing up, so facing is worth more there than gait is.
             bool holdFacing = FaceTarget != null &&
-                              (hasDirectionalClips || desired.sqrMagnitude < 0.0001f);
+                              (hasDirectionalClips || Aligned(desired));
 
             if (holdFacing) TurnToward(FaceTarget, rotationSpeed);
             else TurnToward(desired, rotationSpeed);
+        }
+
+        /// <summary>
+        /// True when she is standing still, or travelling close enough to straight at the target
+        /// that facing the target instead of the travel direction will not show as foot slide.
+        ///
+        /// MoveDirection arrives normalized - PlayerLocomotion.CameraRelative normalizes it - so
+        /// there is no partial-deflection signal to read here. The usable question is not "how
+        /// hard is she moving" but "how far apart are travel and the target".
+        /// </summary>
+        bool Aligned(Vector3 desired)
+        {
+            if (desired.sqrMagnitude < 0.0001f) return true;
+            if (FaceTarget == null || holdFacingMaxAngle <= 0f) return false;
+
+            Vector3 toTarget = FaceTarget.position - transform.position;
+            toTarget.y = 0f;
+            if (toTarget.sqrMagnitude < 0.0001f) return true;
+
+            return Vector3.Angle(desired, toTarget) <= holdFacingMaxAngle;
         }
 
         void TurnToward(Transform target, float degreesPerSecond)

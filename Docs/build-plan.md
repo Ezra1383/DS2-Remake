@@ -1,5 +1,9 @@
 # Ten Deaths to the Mirror — Build Plan
 
+> **DEADLINE CHANGED 16 SEP 2026.** The instructor cut the project to **five days from 16 Sep —
+> ship 20 September 2026**. Day numbers below still refer to the original 30-day schedule; Phase 4
+> has been rewritten for the real one. Phases 0–3 are complete.
+
 ## Context
 
 `Docs/combat-design.html` is a finished design document: one arena, one boss, a mirror match where each death teaches you the move that killed you. It defines the frame data, the posture economy, the unlock ladder and a four-week schedule. What it does not have is an execution order — a list of steps you can work down, each with a stopping condition that tells you it is done.
@@ -320,9 +324,9 @@ tells beats a clever one that lands on day 25.
 ### Step 2.3 — Telegraphs and first playtest (Days 13–14)
 
 You cannot author new animation, so tells come from elsewhere, in this order of value:
-1. **Distinct audio cue per move, on startup frame.** Cheapest, largest effect.
-2. **Weapon trail that colours in during startup** (`TrailRenderer` on the blade tip, colour lerped over the startup window).
-3. **Animator speed dip** in the first few frames of startup.
+1. **Distinct audio cue per move, on startup frame.** Cheapest, largest effect. **Still open** — the system is built and silent; the clips are the gap.
+2. ~~**Weapon trail that colours in during startup**~~ — **DONE 16 Sep.** `WeaponTrail.cs`, boss only: her blade ramps cold→hot across the wind-up and snaps to the swing colour as the hitbox opens. The player deliberately does not get it, on the mirror-match rule.
+3. **Animator speed dip** in the first few frames of startup. Still open, and now the cheapest thing left here.
 
 Then play the fight for real, with the full moveset unlocked. Write down what feels unfair; do not fix any of it yet.
 
@@ -489,12 +493,14 @@ largest-effect telegraph available, and it is the same mechanism.
 
 #### Not done yet
 
-- **Damage vignette** for the player. Needs a Canvas, and there is none until the Week 4 HUD. The
-  camera asymmetry and audio carry the mirror rule without it for now.
-- **Impact VFX and weapon trails.** `HitFeedback` has the particle slots and spawns at the real
-  contact point; no particle assets exist yet. Built-in Particle System only — there is **no VFX
-  Graph and no Shader Graph** in the manifest — so unlit/additive Shuriken, which suits the toon
-  look anyway.
+- ~~**Damage vignette** for the player. Needs a Canvas, and there is none until the Week 4 HUD.~~
+  **Done 16 Sep** with the HUD — and it never needed a Canvas. `CombatHUD` draws it in OnGUI from
+  a 64×64 radial texture generated at runtime, so the player's half of the mirror rule is in.
+- ~~**Impact VFX and weapon trails.** `HitFeedback` has the particle slots and spawns at the real
+  contact point; no particle assets exist yet.~~ **Done 16 Sep** — `Tools ▸ DS2 ▸ Build VFX`
+  generates the textures procedurally (the pack ships no particle art), builds additive URP
+  Shuriken effects for normal / heavy / **parry**, and puts a trail on the blade. The parry had
+  been spawning nothing at all. See `project-notes.md` §7.
 
 If week three overruns, cut stance polish — not this.
 
@@ -502,14 +508,48 @@ If week three overruns, cut stance polish — not this.
 
 ---
 
-## Phase 4 — Tune until it's fair, then ship (Days 22–30, to 2 Oct)
+## Phase 4 — RESCOPED 16 Sep: five days, not nine (16–20 Sep)
+
+**The instructor cut the deadline on 16 Sep to five days from that date.** The original Days 22–30
+below are preserved at the end of this section for the record, but they are not the plan any more.
+
+The saving grace is that Phases 0–3 are all complete: the juice pass arrived on Day 10 instead of
+Day 21, progression on Day 13 instead of Day 17, and the **HUD on Day 14 instead of Days 25–26**.
+What is left is triage.
+
+- **Day 14 (16 Sep) — HUD. DONE.** `UI/CombatHUD.cs` — player health, boss health, boss posture,
+  learned moves, damage vignette. IMGUI rather than a Canvas; see `project-notes.md` §7 for why,
+  and for the one thing that bought: the vignette is no longer blocked.
+- **Day 14 (16 Sep) — Impact VFX and weapon trails. DONE**, pulled forward from the cut list.
+  `WeaponTrail.cs` + `Editor/VfxWiring.cs`. The trail half doubles as the Step 2.3 telegraph.
+- **Day 14 (16 Sep) — Player attack tracking. DONE**, out of order: the first playtest found the
+  player could not reliably hit the boss. Not the missing strafe clips — `trackDegreesPerSecond`
+  was `forBoss ? bossTrack : 0f`, so she corrected at 240 deg/s mid-wind-up and the player at 0.
+  Fixed in the spec table; **re-run `Build Move Assets`**. See `project-notes.md` §7.
+- **Day 15 (17 Sep) — The playtest, then audio.** Play the whole arc from a wiped save and write
+  down what feels unfair *before* touching anything. That list is the only input the balance pass
+  gets. Then buy/record the ~15 clips in Step 3.3 — they double as the Step 2.3 telegraphs.
+- **Day 16 (18 Sep) — Balance.** Boss damage first; it is the fastest lever on arc length. Target
+  2–4 minutes on a winning attempt. Accept "roughly right" — there is no second pass.
+- **Day 17 (19 Sep) — Build early, then edge cases.** Make the standalone build FIRST, before the
+  edge-case work, not after. Animation events and `Resources` lookups behave differently in a build
+  and that is not a thing to discover on the final morning. Then take the edge-case list in
+  priority order and stop when the day does: death during stun, camera on target death, boss killed
+  mid-attack, two hits on one frame.
+- **Day 18 (20 Sep) — Ship.** Rebuild, three recorded playthroughs, write-up.
+
+**Buffer: none.** Cut in this order if a day overruns: edge cases, then balance depth, then the
+number of audio variations (one clip per slot still beats silence). **Do not cut the build day** —
+an editor-only submission is the one failure mode that loses everything at once.
+
+### What this replaces (original Days 22–30, to 2 Oct)
 
 - **Days 22–24 — Balance the ten-death arc.** Play start to finish, repeatedly, from a wiped save. Tune **boss damage first** — it is the fastest lever on arc length. Target: 2–4 minutes on a winning attempt, roughly one death per unlock for a competent player.
 - **Days 25–26 — HUD and audio.** Player health, boss health, boss posture, learned-moves list. Full audio pass.
 - **Days 27–28 — Edge cases.** Death during stun. Unlock granted mid-animation. Camera on target loss or target death. Boss killed during her own attack. Player dying to a move that's already unlocked with the ladder exhausted. Two hits landing on the same frame.
 - **Days 29–30 (1–2 Oct) — Build, test the build, write-up.** Test the *build*, not the editor — animation events and `Resources` lookups behave differently there.
 
-**Buffer: 3 Oct, one day.**
+**Buffer was: 3 Oct, one day.**
 
 ---
 
@@ -602,6 +642,11 @@ clips, different data. Build the boss set when wiring Step 2.2.
 - Backing away from the boss plays a forward walk. Visible, and it matters because backing off is
   a core defensive verb in a game with no block button.
 - Mild foot slide remains on the run cycle.
+
+**These are appearance problems, not aiming problems** — worth stating plainly because the first
+playtest read "hard to hit her" as a missing-strafe problem when the cause was the player's attack
+tracking sitting at 0 (fixed 16 Sep). Strafe clips would stop the skating; they were never what
+made swings miss.
 
 Sourcing or authoring **Walk_Back, Strafe_L, Strafe_R** (and ideally the run equivalents) would close
 all three. That converts the locomotion tree from 1D on `Speed` to 2D on `MoveX`/`MoveY` — both

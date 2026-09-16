@@ -104,12 +104,28 @@ namespace DS2.EditorTools
             /// <summary>Normalized point where facing locks. Left at 0, a sensible default is used.</summary>
             public float trackUntil;
 
-            /// <summary>
-            /// Degrees per second the BOSS may turn during that window. The player stays at 0 -
-            /// their swings point where the stick pointed, and taking that away would feel like
-            /// the game steering for them.
-            /// </summary>
+            /// <summary>Degrees per second the BOSS may turn during that window.</summary>
             public float bossTrack;
+
+            /// <summary>
+            /// Degrees per second the PLAYER may turn during that window.
+            ///
+            /// This was 0 for every move until 16 Sep, on the reasoning that a swing should point
+            /// where the stick pointed and steering it for the player would feel like the game
+            /// taking over. The first playtest killed that: with no strafe clips she turns to
+            /// face her direction of TRAVEL, and facing freezes the instant a move starts, so an
+            /// attack thrown while moving goes wherever you were walking rather than at the
+            /// target. The boss meanwhile corrects at 240 deg/s. Her hits landed and yours did
+            /// not, and the cause was in the data rather than in the animation set.
+            ///
+            /// The original concern survives intact, because tracking turns toward FaceTarget and
+            /// FaceTarget is null unless you are locked on: THIS VALUE ONLY APPLIES WHILE LOCKED
+            /// ON. Free-aim still points exactly where the stick pointed.
+            ///
+            /// Committed moves get less than the light chain deliberately - a Special that
+            /// swings 180 degrees to find you stops being a commitment.
+            /// </summary>
+            public float playerTrack;
 
             public float TrackUntil => trackUntil > 0f ? trackUntil : 0.25f;
 
@@ -123,11 +139,11 @@ namespace DS2.EditorTools
         // speedMultiplier is derived from measured/duration, never hand-typed.
         static readonly Spec[] Specs =
         {
-            new Spec { id = MoveId.Slash1, trackUntil = 0.26f, bossTrack = 240f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
+            new Spec { id = MoveId.Slash1, trackUntil = 0.26f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
                        damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2, chain = 1.0f },
-            new Spec { id = MoveId.Slash2, trackUntil = 0.22f, bossTrack = 240f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
+            new Spec { id = MoveId.Slash2, trackUntil = 0.22f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
                        damage = 10, posture = 15, hbOpen = 0.258f, hbClose = 0.419f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
-            new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
+            new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, playerTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 
             new Spec { id = MoveId.Evade, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Evade", clip = "Evade", measured = 1.467f,
@@ -155,7 +171,7 @@ namespace DS2.EditorTools
                        state = "Evade", clip = "Evade", measured = 1.467f, tempo = 2.6f, end = 0.55f,
                        pStart = 0.02f, pEnd = 0.38f, cancel = 1f },
 
-            new Spec { id = MoveId.QuickShiftF, trackUntil = 0.12f, bossTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
+            new Spec { id = MoveId.QuickShiftF, trackUntil = 0.12f, bossTrack = 360f, playerTrack = 300f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
             new Spec { id = MoveId.QuickShiftB, trackUntil = 0.10f, bossTrack = 0f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_B", clip = "Quickshift_B", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },
@@ -168,12 +184,12 @@ namespace DS2.EditorTools
             new Spec { id = MoveId.Draw, trackUntil = 0.10f, bossTrack = 0f,    state = "Take", clip = "Take", measured = 1.733f, cancel = 1f },
             new Spec { id = MoveId.Sheathe, trackUntil = 0.10f, bossTrack = 0f, state = "Put",  clip = "Put",  measured = 1.667f, cancel = 1f },
 
-            new Spec { id = MoveId.Skill1, trackUntil = 0.26f, bossTrack = 150f, end = 0.93f, state = "Sp_Skill1", clip = "Sp_Skill1", measured = 3.200f,
+            new Spec { id = MoveId.Skill1, trackUntil = 0.26f, bossTrack = 150f, playerTrack = 180f, end = 0.93f, state = "Sp_Skill1", clip = "Sp_Skill1", measured = 3.200f,
                        damage = 18, posture = 30, hbOpen = 0.309f, hbClose = 0.433f, cancel = 1f },
             // Vendor naming inconsistency: state Sp_Skill2 plays clip K_Sp_Skill_2.
-            new Spec { id = MoveId.Skill2, trackUntil = 0.28f, bossTrack = 200f, end = 0.93f, state = "Sp_Skill2", clip = "K_Sp_Skill_2", measured = 3.867f,
+            new Spec { id = MoveId.Skill2, trackUntil = 0.28f, bossTrack = 200f, playerTrack = 200f, end = 0.93f, state = "Sp_Skill2", clip = "K_Sp_Skill_2", measured = 3.867f,
                        damage = 22, posture = 34, hbOpen = 0.328f, hbClose = 0.483f, cancel = 1f },
-            new Spec { id = MoveId.Skill3, trackUntil = 0.28f, bossTrack = 120f, end = 0.85f, state = "Sp_Skill3", clip = "Sp_Skill3", measured = 4.500f,
+            new Spec { id = MoveId.Skill3, trackUntil = 0.28f, bossTrack = 120f, playerTrack = 120f, end = 0.85f, state = "Sp_Skill3", clip = "Sp_Skill3", measured = 4.500f,
                        damage = 28, posture = 40, hbOpen = 0.345f, hbClose = 0.483f, cancel = 1f },
         };
 
@@ -228,7 +244,7 @@ namespace DS2.EditorTools
                 move.chainChance = s.ChainChance;
                 move.moveEnd = forBoss ? s.BossEnd : s.End;
                 move.trackUntil = s.TrackUntil;
-                move.trackDegreesPerSecond = forBoss ? s.bossTrack : 0f;
+                move.trackDegreesPerSecond = forBoss ? s.bossTrack : s.playerTrack;
                 move.weaponSocket = forBoss ? "" : s.socket;
                 move.endWeaponSocket = forBoss ? "" : s.endSocket;
 

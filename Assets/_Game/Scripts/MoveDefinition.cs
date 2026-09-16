@@ -170,5 +170,30 @@ namespace DS2
         public bool HasHitbox => hitboxClose > hitboxOpen;
         public bool HasIFrames => iframeEnd > iframeStart;
         public bool CanChain => nextInChain != null && cancelWindow < 1f;
+
+        /// <summary>
+        /// Move names as the player should read them, not as the enum spells them. Lives here
+        /// rather than on either screen because the death card and the HUD have to agree - the
+        /// card names the move you just learned and the HUD lists it a second later, and two
+        /// copies of this table would eventually disagree about one of them.
+        /// </summary>
+        public static string DisplayName(MoveId id) => id switch
+        {
+            MoveId.Slash1 => "Slash 1",
+            MoveId.Slash2 => "Slash 2",
+            MoveId.Slash3 => "Slash 3",
+            MoveId.Evade => "Evade",
+            MoveId.Parry => "Parry",
+            MoveId.QuickShiftF => "Quick Shift - Forward",
+            MoveId.QuickShiftB => "Quick Shift - Back",
+            MoveId.QuickShiftL => "Quick Shift - Left",
+            MoveId.QuickShiftR => "Quick Shift - Right",
+            MoveId.Draw => "The Draw",
+            MoveId.Sheathe => "Sheathe",
+            MoveId.Skill1 => "Skill 1",
+            MoveId.Skill2 => "Skill 2",
+            MoveId.Skill3 => "Skill 3",
+            _ => id.ToString(),
+        };
     }
 }

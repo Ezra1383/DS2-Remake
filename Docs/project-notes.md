@@ -7,7 +7,9 @@ and decisions taken along the way, so none of it has to be rediscovered.
 is the reference** — environment facts, asset-pack structure, gotchas, and why things are the
 way they are.
 
-Last updated **15 September 2026** (Day 13 of 30). Ship date **3 October 2026**.
+Last updated **16 September 2026** (Day 14). **Ship date 20 September 2026** - the instructor
+cut the deadline on 16 Sep to five days from that date. The original 3 Oct plan is dead;
+`build-plan.md` Phase 4 has been rescoped to match.
 
 **New here? Read §7 “Start here” first** — current state, the menu items to re-run after a pull,
 and what to do next. §8 is the control scheme.
@@ -275,11 +277,13 @@ late in the schedule.
 
 ### Start here
 
-**Day 13 of 30** (15 Sep 2026). Ship **3 Oct**. Running **ahead** of `build-plan.md` — the juice
-pass came in a week early — but Week 4's balance and edge-case days are still fully spoken for.
+**Day 14** (16 Sep 2026). **Ship 20 Sep — five days, including today.** The deadline was cut by
+the instructor this morning. Phases 0–3 are complete and the juice pass landed a week early, which
+is the only reason this is survivable: what is left is triage, not construction.
 
 The fight is playable end to end: move, lock on, chain three slashes, dodge, parry, use all three
-Specials, break her posture, die, learn the move that killed you, retry in under two seconds.
+Specials, break her posture, die, learn the move that killed you, retry in under two seconds — and
+as of 16 Sep the HUD shows you her health, **her posture**, your health, and what you have learned.
 
 **After a fresh pull, run these in order** (all re-runnable, all overwrite hand edits):
 
@@ -288,19 +292,52 @@ Specials, break her posture, die, learn the move that killed you, retry in under
 | `Tools ▸ DS2 ▸ Build Move Assets` | Player moves. Ends by running the hitbox-window validator |
 | `Tools ▸ DS2 ▸ Rebuild Boss` | Boss moves, moveset, phrases, and prefab wiring + tuning |
 | `Tools ▸ DS2 ▸ Wire Feel` | `HitFeedback`, impulse source, **impulse listener on the camera** |
-| `Tools ▸ DS2 ▸ Wire Progression` | Player move slots, `ProgressionManager`, `DeathScreen`, duplicate cull |
+| `Tools ▸ DS2 ▸ Wire Progression` | Player move slots, `ProgressionManager`, `DeathScreen`, `CombatHUD`, duplicate cull |
+| `Tools ▸ DS2 ▸ Build VFX` | Particle textures, materials, impact/parry prefabs, blade trail, `HitFeedback` slots |
 
-**Next, in order of value:**
+(`Tools ▸ DS2 ▸ Wire HUD` re-adds just the HUD after a scene revert, without the prefab half.)
+
+**Next, in order of value — five days left, so this is now the whole plan:**
 
 1. **Audio — ~15 clips.** The largest remaining gap by some distance, and research finding #2 of
    three. The system is built and silent; shopping list in `build-plan.md` Step 3.3. The parry clip
    matters most — a deflect with no metallic clang is missing most of what makes parrying land.
+   It is also the Step 2.3 telegraph, so it closes two items at once.
 2. **The first real playtest.** Step 2.3's actual deliverable and still never done: play the whole
-   arc from a wiped save, write down what feels unfair, **fix nothing yet**.
-3. **HUD** (Step 4, Days 25–26) — player health, boss health, **boss posture**, learned moves. The
-   posture meter especially, now that parry is a second route to breaking her.
-4. **Housekeeping:** delete `BossAI.cs` (dead since the rewrite); strip the five unused Unity
-   template input actions — `Jump` sits on Space and `Crouch` on pad B, both colliding with Dodge.
+   arc from a wiped save, write down what feels unfair, **fix nothing yet**. Do this before the
+   audio shopping trip — the list of what feels unfair is worth more collected early, and it is
+   the only input the compressed balance pass has.
+3. **Balance, compressed.** Boss damage first; it is the fastest lever on arc length.
+4. **Housekeeping, then build early.** Delete `BossAI.cs` (dead since the rewrite); strip the five
+   unused Unity template input actions — `Jump` sits on Space and `Crouch` on pad B, both colliding
+   with Dodge. **Make a standalone build by day 4, not day 5** — animation events and `Resources`
+   lookups behave differently there and that is not a discovery to make on the last morning.
+
+**HUD — done 16 Sep (Day 14).** `UI/CombatHUD.cs`: player health, boss health, **boss posture**,
+learned-moves panel, and the damage vignette the juice pass had to leave out. Notes:
+
+- **IMGUI, not a uGUI Canvas.** Deliberate under the compressed deadline: no prefabs, no sprites,
+  no `CanvasScaler` to get wrong between the editor and the build. One `GUI.matrix` scale against a
+  1080p reference height makes every resolution agree. `DeathScreen` and `BossDebugHUD` are already
+  OnGUI, so this is a third instance of one pattern rather than a second UI system. The cost is
+  per-frame GC churn in `OnGUI` and text that is not crisp when scaled far up — acceptable here,
+  and the reason to revisit it would be a Canvas-based menu, which is out of scope now.
+- **It also unblocked the damage vignette**, which `build-plan.md` Step 3.3 had parked behind
+  "needs a Canvas, and there is none until the Week 4 HUD". The vignette is a 64×64 radial texture
+  generated at runtime and stretched — no asset, no import settings.
+- **Every animation here runs on `Time.unscaledDeltaTime`.** Same trap as `HitFeedback`: hit stop
+  sets `Time.timeScale = 0`, and a bar lerping on scaled time freezes mid-slide on every connect,
+  which reads as the HUD hitching rather than as the hit landing.
+- **The trailing "chip" bar is what makes damage legible.** The solid bar snaps down immediately so
+  the hit is felt; a pale bar behind it drains after a 0.45 s hold, and the gap between them is the
+  size of what just landed. Without it a three-slash chain is one indistinct slide.
+- **`CombatHUD` guards duplicates the same way `DeathScreen` does** — `Destroy(this)`, the
+  component, never the GameObject. Same reasoning as the arena-deleting `ProgressionManager` bug.
+- **Move names moved to `MoveDefinition.DisplayName`.** The death card names the move you just
+  learned and the HUD panel lists it a second later; two copies of that table would eventually
+  disagree about one of them.
+- **Locked ladder rungs show as `---------`, not as names.** How many are left is information the
+  player should have; which ones they are is the reward.
 
 **Unverified, worth ten minutes each:** does `Committed lunge` ever connect (Skill2 travels 5.18 m
 but is chosen at 2.6–5.5 m, so it may sail straight past)? Does the `Punish` phrase ever fire
@@ -388,6 +425,157 @@ action. Notes:
   the move against the collision it is standing in and slides elsewhere.
 - **`DeathScreen.Retry` forces `Time.timeScale = 1`.** The killing blow's slow motion is still
   running when the card appears; without this the next attempt plays at 30%.
+
+**"The hitbox is broken" was the boss dodging — 16 Sep (Day 14).** The reported symptoms were a
+slash visibly passing through her for no damage, and the second slash of a chain doing nothing
+after the first landed. **Neither was a hitbox fault.**
+
+`BossPerception` rolls a dodge **once per swing**, and a three-slash chain is three swings, so at
+`dodgeChance` 0.25 she dodges at least one link of a chain roughly **58%** of the time. `Evade`
+carries i-frames over `0.083–0.633` — **55% of the move** — and the Quick Shifts `0.091–0.545`, so
+one dodge comfortably covers the follow-ups too. Those hits return `HitResult.Evaded`: no damage,
+by design.
+
+**The bug was that `HitResult.Evaded` produced nothing observable at all.** The branch called
+`sfx.PlayEvaded` and returned — and there are no audio clips yet, no VFX on that path and no flash.
+`HitFeedback`'s own comment says silence there "reads as the game failing to notice rather than as
+a success"; it was right, it just assumed the audio would arrive. So a working dodge and a broken
+hitbox looked identical, and the natural reading was the wrong one.
+
+**The fix is that she now MOVES, not that the hit is annotated.** A reactive dodge always
+backsteps: `PickDodge` used to backpedal under 2 m and sidestep beyond it, and a sidestep at melee
+range reads as repositioning rather than as avoiding the swing. `Quickshift_B` carries **2.82 m**
+of measured root motion straight away from the blade, which is unambiguous. `Evade` is useless
+here and always was — **RootXZNet 0.000**, it steps out and returns, so it reads as her standing
+still and shrugging off the hit. That is the whole reason the dodge was invisible.
+
+The flash-and-VFX route was built first and then switched off (`flashOnEvade`, default off;
+`evadeVfx` built but unassigned). Making her *behave* legibly beats annotating behaviour the player
+cannot read. `HitFlash.Play(Color)` and `FX_Evade` remain for the player's own evade, which is
+in-place and may still want a tell.
+
+**Watch the cost:** every backstep is ~0.7 s of zero threat plus the walk back in, and
+always-backwards spends more of that than the old mix did. If the fight starts to feel like
+chasing her, that is this, and `sidestepChance` on `BossBrain` (default 0) is the dial back.
+
+**The lesson worth keeping: an outcome with no feedback is indistinguishable from a bug**, and it
+will be reported as the most mechanically alarming bug the player can imagine. Every `HitResult`
+needs its own voice. `Evaded` had none, and it cost most of a day in the physics layer.
+
+**Balance question left open:** whether she should be able to dodge *out of* a chain at all.
+`dodgeChance` 0.25 / `dodgeCooldown` 2.5 s / `dodgeRange` 3.5 m are on `BossBrain`. If chain
+pressure is meant to be the route to a posture break, ~58% of chains being interrupted works
+against "aggression is the correct defense". Lower `dodgeChance`, or gate the reaction so she
+cannot dodge a swing that lands while she is already in hit reaction.
+
+**Hitbox detection rewritten 16 Sep (Day 14) — second playtest finding.** Two reported symptoms,
+one root cause: a slash visibly passing through her doing nothing, and the second slash of a chain
+doing nothing after the first one landed.
+
+Detection was `OnTriggerEnter` alone. Both failures follow from that:
+
+- **Tunnelling.** The blade collider is `0.06 × 0.07 × 1.12` — very thin — and it belongs to the
+  character root's compound rigidbody, which is **kinematic with Discrete collision detection**.
+  Physics samples poses 50×/s; between two samples a thin fast box can be entirely one side of her
+  and then entirely the other, and no contact is ever generated.
+- **`OnTriggerEnter` fires on ENTRY.** At close range the blade is frequently already *inside* her
+  hurtbox when the next window in a chain opens, so there is no entry to report. That is exactly
+  the "second slash does nothing" case, and it gets worse the closer you are — i.e. when you are
+  doing the right thing.
+
+**Layers were checked first and are correct**: the player's mask is `8` (layer 3 *Enemy*, the
+boss's hurtbox), the boss's is `64` (layer 6 *Player*, set as a scene override on the player
+instance). A layer fault would have been a total failure, not an intermittent one — the
+intermittency is what points at detection rather than filtering.
+
+**This was not the cause of the reported misses** (see the entry above — she was dodging). It was
+a real latent flaw found while chasing them, and it is kept because a thin fast blade on a Discrete
+kinematic body genuinely can tunnel. `Hitbox` now runs a **swept overlap query** in `FixedUpdate` while the window is open: it
+sub-steps between the blade's pose last physics step and its pose now (`sweepSubSteps`, default 5)
+and runs `Physics.OverlapBox` at each. Sub-stepping defeats the tunnelling; asking *"is anything
+inside right now"* rather than *"did anything just enter"* defeats the chain case.
+
+- **The trigger callback was kept** and both paths funnel into one `TryHit`. `alreadyHit` means
+  whichever sees the target first wins and the other is a no-op. Losing hits entirely would be a
+  worse failure than the intermittent one being fixed, and this could not be verified in play
+  before shipping it.
+- **`Open()` resets the sweep's previous pose.** Carrying it over from the last swing would sweep
+  across the gap between them — through anything standing in between, and across the entire arena
+  after a retry teleport.
+- **`logSweep` on `Hitbox`** names every collider the sweep touches. That is the switch for
+  telling "the window never opened" apart from "the window opened and detection missed".
+- **If misses persist, the next lever is the blade's thinness**, not the sweep count. Plenty of
+  action games make the damage volume fatter than the visible weapon; widening the box's X/Y is
+  cheaper than raising sub-steps and is what the remaining near-misses would be.
+
+**Player attack tracking, 16 Sep (Day 14) — found by the first playtest.** The complaint was
+"it is really hard to hit her, I can never face her." The cause was not the missing strafe clips,
+which is where suspicion naturally falls:
+
+- With no directional clips she turns to face her direction of **travel**, and `UpdateRotation`
+  **freezes facing the instant a move starts**. So an attack thrown while moving points where you
+  were walking, not at the target.
+- `CombatSetupTools` line ~231 read `forBoss ? s.bossTrack : 0f` — **the boss corrected at
+  240 deg/s through her wind-up and the player at zero, on every single move.** Her swings landed
+  and yours did not, and the asymmetry was in the data rather than in the animation set.
+
+The original reasoning for the zero ("player swings point where the stick pointed, steering them
+would feel like the game taking over") was sound for free-aim and was simply never revisited once
+lock-on became how the fight is actually played. **It survives intact anyway**, because tracking
+turns toward `FaceTarget` and `FaceTarget` is null unless locked on — so `playerTrack` applies
+**only while locked on**, and free-aim is untouched. No new code; one field on `Spec`.
+
+Values: **420 deg/s on Slash 1-2, 360 on Slash 3**, 300 on Quick Shift Forward (a gap-closer
+should close the gap), **180/200/120 on the Specials** — a commitment that swings 180 degrees to
+find you is not a commitment. Evade, Parry, the back and side dashes and the stance moves stay at
+**0**: a dodge that steers toward the boss is not a dodge.
+
+Also widened when she holds facing at all. It was `desired.sqrMagnitude < 0.0001f` — exactly zero
+input — and **`MoveDirection` arrives normalized** (`PlayerLocomotion.CameraRelative` normalizes),
+so there is no partial-deflection signal to read and a magnitude-based deadzone would be dead
+code. The usable question is the **angle between travel and the target**: `holdFacingMaxAngle`
+(40 deg) keeps her facing the Mirror while she walks roughly at her, and lets her turn to face
+travel once she is striding sideways or backing off, which is where the skating actually shows.
+
+**Re-run `Tools ▸ DS2 ▸ Build Move Assets` after pulling this** — the values live in the spec
+table and the move assets are generated from it.
+
+**Impact VFX and weapon trails built 16 Sep (Day 14).** `Feel/WeaponTrail.cs` and
+`Editor/VfxWiring.cs`. One menu item — `Tools ▸ DS2 ▸ Build VFX` — makes the whole set from
+nothing. Notes:
+
+- **The particle textures are generated, not imported.** The Combat Girls pack ships no particle
+  art at all (searched: no spark, glow, smoke, flare or streak PNGs anywhere in it), and there is
+  no VFX Graph and no Shader Graph in the manifest. So `VfxWiring` writes three procedural PNGs —
+  a core flash with four axis spikes, a pointed lens shard, a soft band for the trail — sets their
+  import settings, and builds materials from them. **No art dependency to source, and a fresh
+  clone rebuilds the entire effect set from the menu.**
+- **URP's own `BaseShaderGUI.SetupMaterialBlendMode` sets the additive blend**, rather than hand-
+  writing `_SrcBlend` / `_DstBlend` / `_ZWrite` / queue / keywords. Those are hidden properties
+  whose correct combination is only defined in URP's editor code, and this project has already
+  lost a day to a shader that rendered magenta. `_Surface = 1`, `_Blend = 2`, then let URP do it.
+- **The boss is a Prefab Variant of the player**, so the blade trail goes on `KatanaGirl.prefab`
+  once and she inherits it; only `telegraph` is overridden on her. Adding it to both would give
+  her two trails.
+- **Only the boss gets the wind-up colour ramp.** Her blade warms cold→hot across the startup
+  window and snaps to the swing colour as the hitbox opens; the player's trail appears with the
+  hitbox and nowhere else. This is the same mirror-match rule as the camera shaking for the victim
+  — symmetric feedback makes a same-clips-same-silhouette fight unreadable. It also closes
+  `build-plan.md` Step 2.3's second-cheapest telegraph, so the trail is **not** pure polish.
+- **The parry had no VFX at all.** `SpawnVfx` was only ever called on the damage path; the parry
+  branch froze, shook, played a sound and flashed the attacker, and drew nothing. There is now a
+  `parryVfx` slot, spawned at the *midpoint* between attacker and contact point — spawning at the
+  contact point alone puts the clash inside whoever got parried. It is radial and white where a
+  damage hit is directional and pink, because shape reads faster than colour.
+- **The trail is cut on a teleport.** A retry moves both actors, and a `TrailRenderer` that is not
+  cleared draws a bright line across the arena from where she died to where she respawned. Any
+  tip movement over 1.5 m in one frame clears it.
+- **`WeaponTrail` runs in `LateUpdate`.** The blade's transform is driven by the Animator, so
+  reading the tip any earlier samples the previous frame's pose.
+- **Unverified: which end of the blade collider is the point.** The trail sits at local
+  `z = +0.56` on the `HitBox` (collider is `0.06 × 0.07 × 1.12`, centred). If it comes off the
+  hilt, negate `VfxWiring.BladeTipLocalZ` and re-run. Nothing in the YAML records which end is
+  which.
 
 **Parry added 15 Sep (Day 13), as a deliberate departure from the design doc.**
 `combat-design.html` calls "no block, no parry, no shield" the single most important fact in the

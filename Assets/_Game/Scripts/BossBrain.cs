@@ -101,6 +101,12 @@ namespace DS2
                  "walk back in, so lowering it makes her push more.")]
         [Range(0f, 1f)] [SerializeField] float dodgeChance = 0.25f;
 
+        [Tooltip("Chance a reactive dodge sidesteps instead of stepping back, and only from 2 m " +
+                 "out. 0 means she always backsteps, which is the readable default - a sidestep " +
+                 "at melee range looks like repositioning rather than like avoiding the swing. " +
+                 "Raise it only once the dodge reads clearly and you want the variety back.")]
+        [Range(0f, 1f)] [SerializeField] float sidestepChance;
+
         [SerializeField] float dodgeRange = 3.5f;
         [SerializeField] float dodgeCooldown = 2.5f;
 
@@ -399,14 +405,37 @@ namespace DS2
             return false;
         }
 
+        /// <summary>
+        /// A REACTIVE DODGE ALWAYS GOES BACKWARDS, and that is a readability decision rather than
+        /// a tactical one.
+        ///
+        /// The player has to be able to see that a swing was avoided. `Evade` is useless for this
+        /// - measured RootXZNet is 0.000, it steps out and returns, so it reads as her standing
+        /// still and shrugging the hit off. A sidestep does move her, but sideways at melee range
+        /// looks like repositioning; nothing about it says "that attack missed me". Straight back,
+        /// 2.82 m of measured root motion, away from the blade that was about to land, is the one
+        /// direction that is unambiguous - the movement IS the feedback.
+        ///
+        /// This replaced a flash-and-VFX approach. Making her behave legibly beats annotating
+        /// behaviour the player cannot read.
+        ///
+        /// The cost is real and worth watching: every backstep is ~0.7 s of zero threat plus the
+        /// walk back in, and always-backwards spends more of it than a mix did. If the fight
+        /// starts to feel like chasing her, that is this, and sidestepChance is the dial.
+        /// </summary>
         MoveDefinition PickDodge(float distance)
         {
             if (moveset == null) return null;
 
-            // Backpedal when crowded, sidestep otherwise.
-            return distance < 2f
-                ? moveset.Find(MoveId.QuickShiftB)
-                : moveset.Find(Random.value < 0.5f ? MoveId.QuickShiftL : MoveId.QuickShiftR);
+            if (sidestepChance > 0f && distance >= 2f && Random.value < sidestepChance)
+            {
+                MoveDefinition side =
+                    moveset.Find(Random.value < 0.5f ? MoveId.QuickShiftL : MoveId.QuickShiftR);
+                if (side != null) return side;
+            }
+
+            // The readable default, and the fallback if a side dash is missing from the moveset.
+            return moveset.Find(MoveId.QuickShiftB) ?? moveset.Find(MoveId.Evade);
         }
 
         // ---------------------------------------------------------------- pacing and movement

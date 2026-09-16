@@ -123,6 +123,27 @@ namespace DS2
         [SerializeField] ParticleSystem impactVfx;
         [SerializeField] ParticleSystem heavyImpactVfx;
 
+        [Tooltip("The blades meeting. Deliberately a different shape from a damage hit - radial " +
+                 "and white rather than directional and pink - because a parry is the one " +
+                 "outcome the player most needs to recognise instantly, and it is the only one " +
+                 "that used to produce no visual at all.")]
+        [SerializeField] ParticleSystem parryVfx;
+
+        [Tooltip("Spawned when a swing passes through i-frames. THIS IS NOT DECORATION. Without " +
+                 "it an evaded hit is completely silent and invisible - no damage, no sound, no " +
+                 "flash - and the first playtester read a boss dodging his chain as a broken " +
+                 "hitbox, which cost a day chasing physics. A dodge has to look like a dodge.")]
+        [SerializeField] ParticleSystem evadeVfx;
+
+        [Tooltip("OFF by design. The dodge is shown by MOVEMENT - a reactive dodge backsteps " +
+                 "2.82 m, which is unmistakable - and a flash on top annotates something the " +
+                 "player can already see. Kept because the player's own evade is in place " +
+                 "(RootXZNet 0.000) and may still want a tell if that ever reads as unresponsive.")]
+        [SerializeField] bool flashOnEvade;
+
+        [Tooltip("Cold, where damage is warm, so the two are tellable apart in one frame.")]
+        [SerializeField] Color evadeFlashColor = new(0.55f, 0.85f, 1f);
+
         [Header("Debug")]
         [SerializeField] bool logHits;
 
@@ -277,6 +298,10 @@ namespace DS2
                 // Flash the ATTACKER, not the victim - the deflection happened to her.
                 if (hit.attacker != null && hit.attacker.TryGetComponent(out HitFlash flash))
                     flash.Play();
+
+                // The clash happens BETWEEN the two of them, not on the victim: spawning it at
+                // the contact point alone puts it inside whoever was parried.
+                Spawn(parryVfx, hit, Midpoint(hit));
                 return;
             }
 
@@ -284,7 +309,21 @@ namespace DS2
             {
                 // The dodge worked. Saying so is the player's confirmation - silence reads as the
                 // game failing to notice rather than as a success.
+                //
+                // That was written assuming the audio would exist. It does not yet, and with no
+                // visual either this branch produced NOTHING AT ALL: a boss dodging mid-chain was
+                // indistinguishable from the hitbox failing, which is exactly how the first
+                // playtest read it. Flash and VFX carry it now, clip or no clip.
                 sfx.PlayEvaded(hit.point);
+
+                // Flash the DODGER - the evasion is hers, the same way damage feedback belongs to
+                // whoever took it. Cold colour, so it never reads as a hit landing. Off by
+                // default: the backstep carries this now.
+                if (flashOnEvade && hit.victim != null &&
+                    hit.victim.TryGetComponent(out HitFlash evaded))
+                    evaded.Play(evadeFlashColor);
+
+                Spawn(evadeVfx, hit, hit.point);
                 return;
             }
 
@@ -409,14 +448,28 @@ namespace DS2
             ParticleSystem prefab = hit.damage >= heavyDamage && heavyImpactVfx != null
                 ? heavyImpactVfx
                 : impactVfx;
+            Spawn(prefab, hit, hit.point);
+        }
+
+        /// <summary>Contact point nudged back toward the attacker - where the blades actually met.</summary>
+        static Vector3 Midpoint(in HitInfo hit)
+        {
+            if (hit.attacker == null) return hit.point;
+            Vector3 chest = hit.attacker.transform.position + Vector3.up * 1.2f;
+            return Vector3.Lerp(hit.point, chest, 0.35f);
+        }
+
+        void Spawn(ParticleSystem prefab, in HitInfo hit, Vector3 at)
+        {
             if (prefab == null) return;
 
-            ParticleSystem fx = Instantiate(prefab, hit.point, Quaternion.identity);
+            ParticleSystem fx = Instantiate(prefab, at, Quaternion.identity);
 
             // Face the effect back along the blow, so it reads as coming from the attacker.
             if (hit.attacker != null)
             {
-                Vector3 away = hit.point - hit.attacker.transform.position;
+                Vector3 away = at - hit.attacker.transform.position;
+                away.y = 0f;
                 if (away.sqrMagnitude > 0.0001f) fx.transform.rotation = Quaternion.LookRotation(away);
             }
 

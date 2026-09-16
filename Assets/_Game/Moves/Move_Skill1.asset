@@ -26,7 +26,7 @@ MonoBehaviour:
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.26
-  trackDegreesPerSecond: 0
+  trackDegreesPerSecond: 180
   moveEnd: 0.93
   weaponSocket: 
   endWeaponSocket: 

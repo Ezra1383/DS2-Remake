@@ -36,6 +36,9 @@ namespace DS2
         Character_Weapon_Controller weapon;
 
         public int Health { get; private set; }
+
+        /// <summary>Denominator for the HUD bar. The field itself stays private and tunable.</summary>
+        public int MaxHealth => maxHealth;
         public bool IsDead { get; private set; }
         public bool IsInvulnerable { get; private set; }
 
