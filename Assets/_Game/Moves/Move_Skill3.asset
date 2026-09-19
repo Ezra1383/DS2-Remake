@@ -30,7 +30,7 @@ MonoBehaviour:
   moveEnd: 0.85
   weaponSocket: 
   endWeaponSocket: 
-  swingSound: {fileID: 0}
+  swingSound: {fileID: 8300000, guid: 498390ed565011e468806f5fe8d3fe40, type: 3}
   swingSoundNormalized: 0.285
   impactSound: {fileID: 0}
   hitstopOverride: 0

@@ -21,6 +21,8 @@ MonoBehaviour:
   postureDamage: 0
   hitboxOpen: 0
   hitboxClose: 0
+  parryStart: 0
+  parryEnd: 0
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.1
@@ -28,7 +30,7 @@ MonoBehaviour:
   moveEnd: 1
   weaponSocket: 
   endWeaponSocket: 
-  swingSound: {fileID: 0}
+  swingSound: {fileID: 8300000, guid: e1372065afc02dd4ca6bf0be817a422d, type: 3}
   swingSoundNormalized: 0.02
   impactSound: {fileID: 0}
   hitstopOverride: 0

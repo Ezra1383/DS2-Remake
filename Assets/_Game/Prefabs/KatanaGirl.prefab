@@ -473,7 +473,7 @@ MonoBehaviour:
   breakRange: 20
   targetLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 8
 --- !u!114 &5102360268871198196
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -205,6 +205,7 @@ namespace DS2
             foreach (PostureSystem posture in FindObjectsByType<PostureSystem>(FindObjectsSortMode.None))
             {
                 posture.Broken += OnPostureBroken;
+                posture.Recovered += OnPostureRecovered;
                 subscribedPosture.Add(posture);
             }
 
@@ -218,7 +219,11 @@ namespace DS2
         void UnsubscribeAll()
         {
             foreach (PostureSystem p in subscribedPosture)
-                if (p != null) p.Broken -= OnPostureBroken;
+            {
+                if (p == null) continue;
+                p.Broken -= OnPostureBroken;
+                p.Recovered -= OnPostureRecovered;
+            }
             subscribedPosture.Clear();
 
             foreach (CombatActor a in subscribedActors)
@@ -373,6 +378,18 @@ namespace DS2
             SlowMo(breakSlowMoScale, breakSlowMoDuration, "posture break");
             Shake(breakTrauma, at);
             sfx.PlayPostureBreak(at);
+        }
+
+        /// <summary>
+        /// The opening closing again. SOUND ONLY - no freeze, no shake, no slow motion.
+        ///
+        /// PostureSystem fires Recovered when the stagger ends, which is the moment the player's
+        /// pressure came to nothing. Spending a hit stop on that would dress up a failure as an
+        /// event, and hit stop is the game's way of saying something landed.
+        /// </summary>
+        void OnPostureRecovered(PostureSystem posture)
+        {
+            sfx.PlayPostureRecover(posture.transform.position + Vector3.up);
         }
 
         void OnDied(CombatActor actor)

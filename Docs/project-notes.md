@@ -323,8 +323,13 @@ stop, camera shake, particles and a blade trail; her wind-up telegraphs through 
 | `Tools ▸ DS2 ▸ Wire Feel` | `HitFeedback`, impulse source, **impulse listener on the camera** |
 | `Tools ▸ DS2 ▸ Wire Progression` | Player move slots, `ProgressionManager`, `DeathScreen`, `CombatHUD`, duplicate cull |
 | `Tools ▸ DS2 ▸ Build VFX` | Particle textures, materials, impact/parry prefabs, blade trail, `HitFeedback` slots |
+| `Tools ▸ DS2 ▸ Build Audio` | Synthesised SFX bank + import settings, `HitFeedback` banks, per-move `swingSound` |
 
 (`Tools ▸ DS2 ▸ Wire HUD` re-adds just the HUD after a scene revert, without the prefab half.)
+
+(`Build Audio` is the one tool that does **not** overwrite hand edits: it skips any WAV already on
+disk, so a real recording dropped over a generated file survives. `Build Audio (Regenerate All)`
+is the one that overwrites.)
 
 **One day left. In this order, and stop when the day does:**
 

@@ -21,6 +21,8 @@ MonoBehaviour:
   postureDamage: 25
   hitboxOpen: 0.05
   hitboxClose: 0.18
+  parryStart: 0
+  parryEnd: 0
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.24
@@ -28,7 +30,7 @@ MonoBehaviour:
   moveEnd: 0.61
   weaponSocket: To_Hand_R_Socket-Blade
   endWeaponSocket: To_Hand_R_Socket-Blade
-  swingSound: {fileID: 0}
+  swingSound: {fileID: 8300000, guid: a86a1fcebfbf7504787334e3bf9b7f20, type: 3}
   swingSoundNormalized: 0.02
   impactSound: {fileID: 0}
   hitstopOverride: 0

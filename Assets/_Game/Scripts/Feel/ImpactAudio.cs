@@ -40,6 +40,12 @@ namespace DS2
                  "the single most important sound in the game.")]
         [SerializeField] AudioClip postureBreak;
 
+        [Tooltip("Her posture draining back to zero - the opening closing again. Deliberately " +
+                 "quiet and unremarkable: this fires when the player has LOST the window they " +
+                 "were building, and a rewarding sound on a failure state teaches the wrong " +
+                 "lesson about when to press.")]
+        [SerializeField] AudioClip postureRecover;
+
         [SerializeField] AudioClip death;
 
         [Header("Mix")]
@@ -111,6 +117,7 @@ namespace DS2
         public void PlayEvaded(Vector3 at) => Play(Pick(evaded), at, 1f);
         public void PlayParry(Vector3 at) => Play(Pick(parry), at, 1f);
         public void PlayPostureBreak(Vector3 at) => Play(postureBreak, at, 1f);
+        public void PlayPostureRecover(Vector3 at) => Play(postureRecover, at, 1f);
         public void PlayDeath(Vector3 at) => Play(death, at, 1f);
 
         /// <summary>Plays a move's own swing clip. Called by CombatActor from a normalized window.</summary>
