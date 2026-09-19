@@ -135,6 +135,14 @@ namespace DS2
                     hitboxOpen = shouldBeOpen;
                     if (shouldBeOpen) hitbox.Open(this, CurrentMove);
                     else hitbox.Close();
+
+                    // Under logHits rather than the Hitbox's own switch on purpose: this is the
+                    // one fact that separates "the window never opened" from "the window opened
+                    // and the blade was not on the target", and it needs to be in the same log
+                    // as the damage lines to be read against them.
+                    if (logHits)
+                        Debug.Log($"[{name}] {CurrentMove.moveId} hitbox " +
+                                  $"{(shouldBeOpen ? "OPEN" : "CLOSE")} at t={t:0.000}", this);
                 }
             }
 
@@ -192,6 +200,11 @@ namespace DS2
         void BeginMove(MoveDefinition move, float endOverride)
         {
             CloseHitbox();
+
+            if (logHits)
+                Debug.Log($"[{name}] BEGIN {move.moveId} (state '{move.stateName}', " +
+                          $"dur {move.Duration:0.000}s, hitbox {move.hitboxOpen:0.000}-" +
+                          $"{move.hitboxClose:0.000}, end {move.moveEnd:0.000})", this);
 
             CurrentMove = move;
             moveTimer = 0f;

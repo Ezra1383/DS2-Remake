@@ -142,6 +142,16 @@ marks the end of the swing arc.
 events and runs automatically at the end of `Build Move Assets`. It is worth keeping precisely
 because it caught this: the windows it rejected were the ones a bad analysis had just written.
 
+**KNOW WHAT IT DOES NOT PROVE.** It checks the blade is *drawn* during the window. It cannot check
+the blade is *pointed at anything*. Slash 2's window passed validation for two weeks while sitting
+entirely past Attack2's contact point, and the move damaged nothing the whole time (19 Sep entry
+in §7). A green result from this tool means "not obviously wrong", not "this move connects".
+
+For the same reason, **`To_add_weapon_r-Blade` is not a contact marker.** It records where the
+swing arc ENDS. For Attack1 that is near the contact; for Attack2 it is at the opposite end of the
+clip from it. Reasoning about where a hitbox should sit from that event produced two wrong fixes
+in a row. The only reliable measure was empirical: which windows actually land in play.
+
 ### 2.4 Prefabs
 
 | Prefab | Use |
@@ -277,13 +287,32 @@ late in the schedule.
 
 ### Start here
 
-**Day 14** (16 Sep 2026). **Ship 20 Sep — five days, including today.** The deadline was cut by
-the instructor this morning. Phases 0–3 are complete and the juice pass landed a week early, which
-is the only reason this is survivable: what is left is triage, not construction.
+**Day 17** (19 Sep 2026). **Ship 20 Sep — TOMORROW.** Phases 0–3 are complete; Phase 4 has been
+compressed into whatever tomorrow holds.
 
 The fight is playable end to end: move, lock on, chain three slashes, dodge, parry, use all three
-Specials, break her posture, die, learn the move that killed you, retry in under two seconds — and
-as of 16 Sep the HUD shows you her health, **her posture**, your health, and what you have learned.
+Specials, break her posture, die, learn the move that killed you, retry in under two seconds. The
+HUD shows her health, **her posture**, your health and what you have learned; impacts have hit
+stop, camera shake, particles and a blade trail; her wind-up telegraphs through that trail.
+
+> ### ⚠ Read this before anything else
+>
+> **1. Days 14–17 were spent almost entirely on one bug** — Slash 2 never damaging the boss. It is
+> fixed (see the Slash 2 entry below), but it consumed the audio pass, the balance pass and the
+> playtest. Judge the remaining plan against that, not against the original Phase 4.
+>
+> **2. Turn the debug logging OFF before building.** `logHits` on `KatanaGirl.prefab` AND
+> `Boss Variant.prefab`, and `logSweep` on the HitBox. They are `Debug.Log` per hit and per
+> hitbox-window transition — console spam and a real per-frame cost in a build.
+>
+> **3. Commit state at handoff:** `78ff1f1 Added VFX and HUD` covers most of Days 14–16. Left
+> uncommitted on 19 Sep: the **Slash 2 window fix** (`CombatSetupTools.cs` + the regenerated
+> `Move_Slash2.asset`), the per-move hitbox logging in `CombatActor.cs`, and these docs. The author
+> was pushing manually — **check `git log` and `git status` before assuming anything is versioned.**
+>
+> **4. There has still never been a full playtest from a wiped save.** Every session so far has
+> been played with `unlockEverything` on. The ten-death arc — the thing the game is named after —
+> has not once been experienced as a player would experience it.
 
 **After a fresh pull, run these in order** (all re-runnable, all overwrite hand edits):
 
@@ -297,21 +326,31 @@ as of 16 Sep the HUD shows you her health, **her posture**, your health, and wha
 
 (`Tools ▸ DS2 ▸ Wire HUD` re-adds just the HUD after a scene revert, without the prefab half.)
 
-**Next, in order of value — five days left, so this is now the whole plan:**
+**One day left. In this order, and stop when the day does:**
 
-1. **Audio — ~15 clips.** The largest remaining gap by some distance, and research finding #2 of
-   three. The system is built and silent; shopping list in `build-plan.md` Step 3.3. The parry clip
-   matters most — a deflect with no metallic clang is missing most of what makes parrying land.
-   It is also the Step 2.3 telegraph, so it closes two items at once.
-2. **The first real playtest.** Step 2.3's actual deliverable and still never done: play the whole
-   arc from a wiped save, write down what feels unfair, **fix nothing yet**. Do this before the
-   audio shopping trip — the list of what feels unfair is worth more collected early, and it is
-   the only input the compressed balance pass has.
-3. **Balance, compressed.** Boss damage first; it is the fastest lever on arc length.
-4. **Housekeeping, then build early.** Delete `BossAI.cs` (dead since the rewrite); strip the five
-   unused Unity template input actions — `Jump` sits on Space and `Crouch` on pad B, both colliding
-   with Dodge. **Make a standalone build by day 4, not day 5** — animation events and `Resources`
-   lookups behave differently there and that is not a discovery to make on the last morning.
+1. **MAKE THE STANDALONE BUILD FIRST.** Before any polish. Animation events and `Resources`
+   lookups behave differently in a build than in the editor, and that is not a thing to discover
+   on the final evening. An editor-only submission is the one failure that loses everything at
+   once. Turn the debug logging off as part of this.
+2. **One playthrough from a wiped save** (`wipeOnPlay` on `ProgressionManager`, `unlockEverything`
+   OFF). Confirm the ten-death arc actually functions: each death grants exactly one move, no
+   Special arrives before the Draw, the card reads correctly. This has never been done.
+3. **Balance, only if 2 reveals something serious.** Boss damage is the fastest lever on arc
+   length. Target 2–4 minutes on a winning attempt. Accept "roughly right".
+4. **Audio — ~15 clips**, if any time survives. Shopping list in `build-plan.md` Step 3.3. Still
+   the largest quality gap, and it doubles as the Step 2.3 telegraph. Every slot is optional and
+   silent when empty, so this can be cut entirely without breaking anything.
+5. **Write-up.** Likely carries real weight in the grade, and the raw material here is unusually
+   good — the measured frame data, the boss AI v1 failure and rewrite, the normalized-vs-seconds
+   mistake, and the Slash 2 hunt are all documented with their reasoning intact.
+
+**Cut in this order if the day runs out:** audio variations first, then balance depth, then the
+wiped-save run. **Never cut the build.**
+
+**Not done, and now almost certainly shipping unfixed:** `BossAI.cs` is dead code since the 11 Sep
+rewrite (delete it and the reference in `BossWiring.cs` together); the five unused Unity template
+input actions are still bound, with `Jump` on Space and `Crouch` on pad B colliding with Dodge —
+harmless because nothing reads them, but untidy in a build.
 
 **HUD — done 16 Sep (Day 14).** `UI/CombatHUD.cs`: player health, boss health, **boss posture**,
 learned-moves panel, and the damage vignette the juice pass had to leave out. Notes:
@@ -426,12 +465,50 @@ action. Notes:
 - **`DeathScreen.Retry` forces `Time.timeScale = 1`.** The killing blow's slow motion is still
   running when the card appears; without this the next attempt plays at 30%.
 
-**"The hitbox is broken" was the boss dodging — 16 Sep (Day 14).** The reported symptoms were a
-slash visibly passing through her for no damage, and the second slash of a chain doing nothing
-after the first landed. **Neither was a hitbox fault.**
+**"The hitbox is broken" was Slash 2's window in the wrong place — found 19 Sep (Day 17).** The reported symptom was the second
+slash of a chain never damaging her while the first and third did.
 
-`BossPerception` rolls a dodge **once per swing**, and a three-slash chain is three swings, so at
-`dodgeChance` 0.25 she dodges at least one link of a chain roughly **58%** of the time. `Evade`
+**The cause: `Move_Slash2`'s hitbox window was `0.258-0.419`, and Attack2's contact is at roughly
+`0.10-0.28`.** The two overlapped only across `0.258-0.275` - one or two frames at the very edge -
+so it read as "never".
+
+**Settled at `0.080-0.478`** after two passes. `0.095-0.320` took it from never landing to landing
+about **two swings in five** - right region, too narrow - so the window was opened out to very
+nearly the whole trimmed move. That is blunt on purpose and it is safe: `alreadyHit` caps a swing
+at one hit per target, so a wide window cannot double-hit, and the only cost is that contact may
+register marginally early. **If Slash 2 ever needs retuning, narrow from here and re-measure
+rather than reasoning from event times.**
+
+**How it was finally found, after four wrong guesses: the boss runs the same clip.** Her
+`Boss_Slash2` has the window at `0.095-0.275` and her Slash 2 always landed, while the player's
+never did - same `Attack2` state, same 1.309 s duration, different window. That difference IS the
+measurement. **When two actors share a clip and one's window lands while the other's does not,
+compare them before reasoning about anything else.**
+
+Reasoning from the animation events sent this the wrong way twice. `To_add_weapon_r-Blade` at
+0.475 is described in §2.3 as "the end of the swing arc", which suggested contact was LATE and
+produced a "fix" that moved the window to `0.300-0.478` and made it strictly worse. That event
+marks where the arc finishes, **not where the blade crosses an opponent**, and for Attack2 those
+are at opposite ends of the clip.
+
+**`Validate Hitbox Windows` passed this window for two weeks.** It checks the blade is DRAWN
+during the window; it cannot check the blade is pointed at anything. Worth knowing what that tool
+does and does not prove.
+
+The four wrong guesses, recorded because each cost time: a reactive dodge eating the hits; blade
+tunnelling; `OnTriggerEnter` missing an already-overlapping blade; and the window being too late.
+Two produced real fixes for real latent problems (below) and neither was the bug.
+
+**What would have found it in ten minutes instead of three days:** the per-move logging that
+eventually cracked it - `BEGIN <move> (state, duration, window, end)` plus `hitbox OPEN/CLOSE at
+t=` - printed alongside the damage lines. It is in `CombatActor` under `logHits` now. Any future
+"this attack does not work" starts there, because it separates *the window never opened* from
+*the window opened and the blade was not on the target*, and those two have completely different
+causes. Guessing between them is what cost the time.
+
+Still true and worth keeping, but NOT the cause of the above: `BossPerception` rolls a dodge
+**once per swing**, and a three-slash chain is three swings, so at `dodgeChance` 0.25 she dodges at
+least one link of a chain roughly **58%** of the time. `Evade`
 carries i-frames over `0.083–0.633` — **55% of the move** — and the Quick Shifts `0.091–0.545`, so
 one dodge comfortably covers the follow-ups too. Those hits return `HitResult.Evaded`: no damage,
 by design.

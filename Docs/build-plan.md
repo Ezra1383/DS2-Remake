@@ -3,6 +3,10 @@
 > **DEADLINE CHANGED 16 SEP 2026.** The instructor cut the project to **five days from 16 Sep —
 > ship 20 September 2026**. Day numbers below still refer to the original 30-day schedule; Phase 4
 > has been rewritten for the real one. Phases 0–3 are complete.
+>
+> **STATUS 19 SEP:** four of those five days went to a single bug — Slash 2 never damaging the
+> boss — which is now fixed. The audio pass, the balance pass and the wiped-save playtest were all
+> consumed by it. See `project-notes.md` §7 for the one-day plan that replaces the rest of this.
 
 ## Context
 
@@ -526,17 +530,16 @@ What is left is triage.
   player could not reliably hit the boss. Not the missing strafe clips — `trackDegreesPerSecond`
   was `forBoss ? bossTrack : 0f`, so she corrected at 240 deg/s mid-wind-up and the player at 0.
   Fixed in the spec table; **re-run `Build Move Assets`**. See `project-notes.md` §7.
-- **Day 15 (17 Sep) — The playtest, then audio.** Play the whole arc from a wiped save and write
-  down what feels unfair *before* touching anything. That list is the only input the balance pass
-  gets. Then buy/record the ~15 clips in Step 3.3 — they double as the Step 2.3 telegraphs.
-- **Day 16 (18 Sep) — Balance.** Boss damage first; it is the fastest lever on arc length. Target
-  2–4 minutes on a winning attempt. Accept "roughly right" — there is no second pass.
-- **Day 17 (19 Sep) — Build early, then edge cases.** Make the standalone build FIRST, before the
-  edge-case work, not after. Animation events and `Resources` lookups behave differently in a build
-  and that is not a thing to discover on the final morning. Then take the edge-case list in
-  priority order and stop when the day does: death during stun, camera on target death, boss killed
-  mid-attack, two hits on one frame.
-- **Day 18 (20 Sep) — Ship.** Rebuild, three recorded playthroughs, write-up.
+- **Days 15–17 (17–19 Sep) — WHAT ACTUALLY HAPPENED: one bug.** Slash 2 never damaged the boss.
+  Four wrong diagnoses (reactive dodge, blade tunnelling, `OnTriggerEnter` semantics, window too
+  late) before the cause was found: the window sat past Attack2's contact point. Fixed at
+  `0.080-0.478`. Along the way it produced a swept-overlap hitbox, per-move window logging, the
+  dodge backstep and evade feedback — all real improvements, none of them the bug.
+
+  **The planned playtest, audio pass and balance pass did not happen.** They are not "behind";
+  they are cut unless tomorrow makes room.
+- **Day 18 (20 Sep) — Ship.** Build FIRST, then one wiped-save run, then whatever fits. Full plan
+  in `project-notes.md` §7 "Start here".
 
 **Buffer: none.** Cut in this order if a day overruns: edge cases, then balance depth, then the
 number of audio variations (one clip per slot still beats silence). **Do not cut the build day** —

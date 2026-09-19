@@ -142,7 +142,27 @@ namespace DS2.EditorTools
             new Spec { id = MoveId.Slash1, trackUntil = 0.26f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
                        damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2, chain = 1.0f },
             new Spec { id = MoveId.Slash2, trackUntil = 0.22f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
-                       damage = 10, posture = 15, hbOpen = 0.258f, hbClose = 0.419f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
+                       // RETIMED 19 Sep, TWICE - the first attempt moved it the wrong way.
+                       //
+                       // Slash 2 never damaged anything. The answer came from the boss: she runs
+                       // the SAME Attack2 clip at hitbox 0.095-0.275 and her Slash 2 lands, while
+                       // the player's 0.258-0.419 never did. So Attack2's contact is EARLY, around
+                       // 0.10-0.28 - the original window overlapped it by 0.258-0.275, one or two
+                       // frames at the very edge, which is why it read as "never".
+                       //
+                       // Reasoning from the swing-arc event (To_add_weapon_r-Blade at 0.475) said
+                       // late and was wrong: that event marks where the arc ENDS, not where the
+                       // blade crosses the opponent. Only the boss's working window measured the
+                       // real thing. When two actors share a clip, a window that lands on one and
+                       // not the other is the measurement - use it before reasoning from events.
+                       // WIDENED 19 Sep. 0.095-0.320 took Slash 2 from never landing to landing
+                       // about 2 swings in 5 - the right region, too narrow for where contact
+                       // actually falls. Opened out to nearly the whole trimmed move. A wide
+                       // window costs nothing here: alreadyHit caps it at one hit per swing, so
+                       // the only risk is registering slightly early, and an attack that always
+                       // connects beats a precisely-timed one that connects 40% of the time.
+                       // Still inside cancel 0.484 and moveEnd 0.50 so a chain cannot cut it.
+                       damage = 10, posture = 15, hbOpen = 0.080f, hbClose = 0.478f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
             new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, playerTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 
