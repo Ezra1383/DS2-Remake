@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 043d8520afd543546b125d57a37e6c55
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 364542
+  packageName: "Simple Stylized Fire \u2013 TV Graffiti (URP)"
+  packageVersion: 1.0
+  assetPath: Assets/Rusleo/Fire_TV_Graffiti/Demo/Materials/Skybox.mat
+  uploadId: 870888

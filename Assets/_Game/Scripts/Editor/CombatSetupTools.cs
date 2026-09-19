@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -17,7 +17,7 @@ namespace DS2.EditorTools
     /// </summary>
     static class CombatSetupTools
     {
-        const string AnimFolder = "Assets/CombatGirlsCharacterPack/Katana_Girl/Animations";
+        static string AnimFolder => VendorPaths.AnimFolder;
         const string KiFolder = "Assets/Kevin Iglesias/Human Animations/Animations/Female";
 
         /// <summary>

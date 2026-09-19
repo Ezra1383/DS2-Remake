@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,7 +22,7 @@ namespace DS2.EditorTools
     static class CorpseWiring
     {
         const string KatanaGirl = "Assets/_Game/Prefabs/KatanaGirl.prefab";
-        const string DieFbx = "Assets/CombatGirlsCharacterPack/Katana_Girl/Animations/Normal/K_Die.fbx";
+        static string DieFbx => VendorPaths.DieFbx;
 
         const string PrefabFolder = "Assets/_Game/Prefabs";
         const string CorpseFolder = PrefabFolder + "/Corpses";

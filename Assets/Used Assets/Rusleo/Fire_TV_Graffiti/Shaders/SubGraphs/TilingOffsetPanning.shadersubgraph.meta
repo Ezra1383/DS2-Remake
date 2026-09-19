@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 01ef09ba92329b34195a427801fd2d0d
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 60072b568d64c40a485e0fc55012dc9f, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 364542
+  packageName: "Simple Stylized Fire \u2013 TV Graffiti (URP)"
+  packageVersion: 1.0
+  assetPath: Assets/Rusleo/Fire_TV_Graffiti/Shaders/SubGraphs/TilingOffsetPanning.shadersubgraph
+  uploadId: 870888

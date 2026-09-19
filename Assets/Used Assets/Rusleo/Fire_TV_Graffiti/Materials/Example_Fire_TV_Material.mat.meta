@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3544a7a6d120fe745bfff38c2562bec6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 364542
+  packageName: "Simple Stylized Fire \u2013 TV Graffiti (URP)"
+  packageVersion: 1.0
+  assetPath: Assets/Rusleo/Fire_TV_Graffiti/Materials/Example_Fire_TV_Material.mat
+  uploadId: 870888

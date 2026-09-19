@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,7 +15,7 @@ namespace DS2.EditorTools
     /// </summary>
     static class CreateVariants
     {
-        const string VendorFolder = "Assets/CombatGirlsCharacterPack/Katana_Girl/Prefab";
+        static string VendorFolder => VendorPaths.VendorPrefabFolder;
         const string TargetFolder = "Assets/_Game/Prefabs";
 
         [MenuItem("Tools/DS2/Create Prefab Variants")]
@@ -56,7 +56,7 @@ namespace DS2.EditorTools
                 return;
             }
 
-            // Confirm it really is a Variant and not a flattened copy — the whole point.
+            // Confirm it really is a Variant and not a flattened copy â€” the whole point.
             PrefabAssetType type = PrefabUtility.GetPrefabAssetType(variant);
             if (type == PrefabAssetType.Variant)
                 Debug.Log($"[Variants] Created Variant '{Path.GetFileName(variantPath)}' of '{Path.GetFileName(basePath)}'.", variant);

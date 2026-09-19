@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace DS2.EditorTools
     /// </summary>
     public class ClipReportWindow : EditorWindow
     {
-        const string DefaultSearchFolder = "Assets/CombatGirlsCharacterPack/Katana_Girl/Animations";
+        static string DefaultSearchFolder => VendorPaths.AnimFolder;
         const string DefaultOutputPath   = "Docs/clip-report.csv";
 
         /// <summary>How long each move wants to be, per Docs/combat-design.html.</summary>
@@ -134,7 +134,7 @@ namespace DS2.EditorTools
                     {
                         flag = "RAISE TARGET";
                         warnings.Add($"  {clip.name,-14} {F(length)}s -> {F(targetLength)}s needs {F(m)}x " +
-                                     "— too fast, raise the design target instead");
+                                     "â€” too fast, raise the design target instead");
                     }
                     else if (m < 0.75f)
                     {

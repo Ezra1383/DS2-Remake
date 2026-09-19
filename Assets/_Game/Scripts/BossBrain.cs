@@ -166,9 +166,26 @@ namespace DS2
             }
         }
 
+        /// <summary>
+        /// Waiting for the fight to start. Set by BossGate while the player is outside the arena.
+        ///
+        /// A FLAG RATHER THAN enabled = false, because DeathScreen resolves the boss with
+        /// FindAnyObjectByType&lt;BossBrain&gt;() and a disabled component is a needless way to make
+        /// that depend on script execution order.
+        /// </summary>
+        public bool Dormant { get; set; }
+
         void Update()
         {
             if (player == null || actor.IsDead) return;
+
+            if (Dormant)
+            {
+                if (currentPhrase != null) AbandonPhrase("dormant");
+                locomotion.MoveDirection = Vector3.zero;
+                debugState = "DORMANT";
+                return;
+            }
 
             // Stunned, she is not deciding anything - and the phrase she was in the middle of is
             // gone, not paused. Resuming a combo after a posture break would take back the reward

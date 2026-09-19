@@ -334,6 +334,51 @@ namespace DS2
         }
 
         /// <summary>
+        /// Holds the Stun pose with no clock and no damage multiplier - a boss waiting for the
+        /// fight to begin rather than one who has been opened up.
+        ///
+        /// DELIBERATELY NOT Stagger(). A stagger is an OPENING: it runs a timer, raises Staggered,
+        /// and on a parry or a posture break doubles incoming damage. Routing dormancy through it
+        /// would hand the player a free double-damage window before the fight even starts, and
+        /// would end on its own the moment the timer expired.
+        ///
+        /// The Stun clip loops (2.0 s, 60 frames) and the animator's states are isolated with no
+        /// inbound transitions, so one cross-fade holds indefinitely on its own.
+        /// </summary>
+        public void EnterDormantPose()
+        {
+            if (IsDead) return;
+
+            Interrupt();
+            animator.CrossFadeInFixedTime(StunState, 0.08f);
+        }
+
+        /// <summary>Back to locomotion, respecting whichever stance she is holding.</summary>
+        public void ExitDormantPose()
+        {
+            if (IsDead) return;
+
+            animator.CrossFadeInFixedTime(
+                animator.GetBool(StanceParam) ? LocomotionSpecialState : LocomotionState, blendOut);
+        }
+
+        /// <summary>
+        /// Re-asserts the dormant pose if something pulled her out of it - a hit reaction is the
+        /// realistic case, since a dormant boss is still a valid target.
+        ///
+        /// Checked rather than cross-faded every frame: re-issuing a cross-fade continuously would
+        /// restart the blend each frame and freeze her on the first frame of the clip.
+        /// </summary>
+        public void HoldDormantPose()
+        {
+            if (IsDead || IsStunned || CurrentMove != null) return;
+            if (animator.IsInTransition(0)) return;
+            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash == StunState) return;
+
+            animator.CrossFadeInFixedTime(StunState, 0.15f);
+        }
+
+        /// <summary>
         /// Drops whatever is executing without playing its recovery. Used by PostureSystem on a
         /// break, so a stun can cut her out of her own swing.
         /// </summary>
