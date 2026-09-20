@@ -25,7 +25,8 @@ namespace DS2
         [SerializeField] AudioClip combatTrack;
 
         [Header("Mix")]
-        [Range(0f, 1f)] [SerializeField] float volume = 0.45f;
+        // 0.45 -> 0.5625 on 20 Sep, a quarter up, after the SFX bank came down to 0.675.
+        [Range(0f, 1f)] [SerializeField] float volume = 0.5625f;
         [Tooltip("Seconds to cross-fade between tracks.")]
         [SerializeField] float crossfade = 2.5f;
 

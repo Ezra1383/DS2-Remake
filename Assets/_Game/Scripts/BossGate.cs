@@ -68,12 +68,29 @@ namespace DS2
         void OnEnable()
         {
             if (bossActor != null) bossActor.Damaged += OnBossDamaged;
+            if (player != null) player.Died += OnPlayerDied;
         }
 
         void OnDisable()
         {
             if (bossActor != null) bossActor.Damaged -= OnBossDamaged;
+            if (player != null) player.Died -= OnPlayerDied;
         }
+
+        /// <summary>
+        /// Back to dormant the moment the player dies, whatever sleepWhenPlayerLeaves says.
+        ///
+        /// WITHOUT THIS THE GATE ONLY EVER OPENS ONCE. The retry teleports the player back to a
+        /// spawn outside the arena, but sleepWhenPlayerLeaves defaults to false - so she stayed
+        /// awake and came straight for them across the training ground before they had walked back
+        /// in. Death is not "the player stepped over a line", it is the fight ending, and the
+        /// fight ending has to re-arm the gate.
+        ///
+        /// Sleeping here rather than waiting for the teleport also stops her attacking the corpse
+        /// while the death card is up. If the player happens to respawn INSIDE the volume, the
+        /// poll in Update wakes her again on the next frame, which is correct.
+        /// </summary>
+        void OnPlayerDied(CombatActor _) => Sleep("player died");
 
         void Start()
         {

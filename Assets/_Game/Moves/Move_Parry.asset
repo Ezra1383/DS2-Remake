@@ -21,8 +21,8 @@ MonoBehaviour:
   postureDamage: 0
   hitboxOpen: 0
   hitboxClose: 0
-  parryStart: 0.02
-  parryEnd: 0.38
+  parryStart: 0
+  parryEnd: 0.55
   iframeStart: 0
   iframeEnd: 0
   trackUntil: 0.3

@@ -22,13 +22,16 @@ namespace DS2
         [SerializeField] CombatActor boss;
 
         [Header("Timing")]
-        [Tooltip("Seconds of death animation before the card appears. The whole loop is budgeted " +
-                 "at two seconds, and the killing blow's slow motion is already spending some.")]
-        [SerializeField] float cardDelay = 1.2f;
+        [Tooltip("Seconds after death before the card appears. Raised from 1.2 to 3.0 on 20 Sep: " +
+                 "the Die clip runs 2.833 s and the killing blow's slow motion stretches it to " +
+                 "nearly 3.9 s of real time, so at 1.2 the card was dropping over her while she " +
+                 "was still falling.")]
+        [SerializeField] float cardDelay = 3f;
 
-        [Tooltip("Ignore input briefly after the card appears, so the button press that killed " +
-                 "you does not also skip the one thing the death was for.")]
-        [SerializeField] float inputLockout = 0.35f;
+        [Tooltip("Ignore input for this long AFTER THE DEATH, not after the card. Stops the button " +
+                 "press that killed you from also skipping the death, while still letting an " +
+                 "impatient player retry before the card has finished appearing.")]
+        [SerializeField] float inputLockout = 0.8f;
 
         [Header("Debug")]
         [SerializeField] bool logRetries;
@@ -37,7 +40,15 @@ namespace DS2
         Quaternion playerFacing, bossFacing;
 
         float cardShownAt = -1f;
+        float diedAt = -1f;
         bool waiting;
+
+        /// <summary>
+        /// True while the death or victory card is up and swallowing input. PauseMenu reads this
+        /// so Escape cannot open a pause menu behind a card that already retries on ANY key -
+        /// which would otherwise both pause and restart on the same press.
+        /// </summary>
+        public bool IsShowing => waiting;
         MoveId learned = MoveId.None;
         MoveDefinition killer;
         bool ladderComplete;
@@ -130,12 +141,20 @@ namespace DS2
         void BeginCard()
         {
             waiting = true;
-            cardShownAt = Time.unscaledTime + cardDelay;
+            diedAt = Time.unscaledTime;
+            cardShownAt = diedAt + cardDelay;
         }
 
         void Update()
         {
-            if (!waiting || Time.unscaledTime < cardShownAt + inputLockout) return;
+            // INPUT IS GATED ON THE DEATH, NOT ON THE CARD. Those were the same thing while the
+            // card came up in 1.2 s; now that it waits out the full death animation, tying them
+            // together would have forced everyone to sit through 3.8 s before they could retry,
+            // and the whole loop is budgeted at about two seconds.
+            //
+            // So the animation plays uninterrupted for anyone watching it, and anyone who has
+            // seen it nine times already can press a key and go.
+            if (!waiting || Time.unscaledTime < diedAt + inputLockout) return;
 
             Keyboard kb = Keyboard.current;
             Gamepad pad = Gamepad.current;

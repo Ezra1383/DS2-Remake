@@ -225,7 +225,24 @@ namespace DS2.EditorTools
             new Spec { id = MoveId.Parry, trackUntil = 0.30f, bossTrack = 0f,
                        socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade",
                        state = "Evade", clip = "Evade", measured = 1.467f, tempo = 2.6f, end = 0.55f,
-                       pStart = 0.02f, pEnd = 0.38f, cancel = 1f },
+                       // WIDENED 20 Sep - 0.02-0.38 was ~203 ms and read as unusably tight in play.
+                       //
+                       // The move runs 1.467 / 2.6 = 0.564 s, so a normalized window is worth
+                       // 0.564 s of real time. 0.0-0.55 is therefore ~310 ms, half again as long.
+                       //
+                       // 0.55 is the CEILING, not a choice: moveEnd is 0.55 and EndMove clears
+                       // IsParrying, so anything past it would never be read. To go wider than
+                       // ~310 ms, raise end as well - the window cannot outlive the move.
+                       //
+                       // Starting at 0.0 also removes the start-up delay: the parry is live on the
+                       // first frame, so pressing it late is the only way to miss, which is the
+                       // failure players can actually learn from.
+                       //
+                       // Watch the balance note in project-notes: a parry buys the same opening as
+                       // four seconds of sustained pressure. Easier parry means less reason to
+                       // pressure. If it starts feeling strictly better than attacking, this
+                       // number is why - and Hitbox.parryStagger is the other end of the trade.
+                       pStart = 0.0f, pEnd = 0.55f, cancel = 1f },
 
             new Spec { id = MoveId.QuickShiftF, trackUntil = 0.12f, bossTrack = 360f, playerTrack = 300f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", state = "Quickshift_F", clip = "Quickshift_F", measured = 1f,
                        ifStart = 0.091f, ifEnd = 0.545f, cancel = 0.636f },

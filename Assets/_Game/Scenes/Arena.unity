@@ -5489,7 +5489,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DS2.MusicPlayer
   explorationTrack: {fileID: 8300000, guid: b6e106f5160ea754895428a65dd1367c, type: 3}
   combatTrack: {fileID: 8300000, guid: 259f09ee1523ac94eb3786a19cd9a135, type: 3}
-  volume: 0.45
+  volume: 0.5625
   crossfade: 2.5
   gate: {fileID: 1284670528}
 --- !u!4 &238240278
@@ -7210,7 +7210,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41c62068244446d41b6ed6e110ada5c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DS2.ProgressionManager
-  wipeOnPlay: 0
+  wipeOnPlay: 1
   unlockEverything: 0
   logUnlocks: 0
 --- !u!4 &305450535
@@ -20838,6 +20838,68 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 1123829968433646515, guid: 28e05133da4356a4481dc9bd40ad9986, type: 3}
+--- !u!1 &1031647373
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1031647376}
+  - component: {fileID: 1031647375}
+  - component: {fileID: 1031647374}
+  m_Layer: 0
+  m_Name: GameUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1031647374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031647373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f7a5c124da123342b0c6f94564d37d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.ControlsHint
+  gate: {fileID: 1284670528}
+  autoHideAfter: 0
+  backgroundAlpha: 0.55
+--- !u!114 &1031647375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031647373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0917d00dc8ce66041ba87b159601da25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DS2.PauseMenu
+  deathScreen: {fileID: 2111741159}
+  resumeTimeScale: 1
+--- !u!4 &1031647376
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031647373}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1036818119
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32269,8 +32331,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1641006657}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -89.64169, y: 17.75, z: 12.70998}
+  m_LocalRotation: {x: -0.092150904, y: -0, z: -0, w: 0.9957451}
+  m_LocalPosition: {x: -89.64169, y: 16.326078, z: 11.960737}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -32286,7 +32348,7 @@ Transform:
   - {fileID: 109642431}
   - {fileID: 423834338}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -10.575, y: 0, z: 0}
 --- !u!1001 &1643371164
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41562,8 +41624,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DS2.DeathScreen
   player: {fileID: 0}
   boss: {fileID: 0}
-  cardDelay: 1.2
-  inputLockout: 0.35
+  cardDelay: 3
+  inputLockout: 0.8
   logRetries: 0
 --- !u!4 &2111741160
 Transform:
@@ -42466,3 +42528,4 @@ SceneRoots:
   - {fileID: 1268153387}
   - {fileID: 51716656}
   - {fileID: 238240278}
+  - {fileID: 1031647376}
