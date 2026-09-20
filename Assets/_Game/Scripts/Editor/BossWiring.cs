@@ -6,7 +6,7 @@ using UnityEngine;
 namespace DS2.EditorTools
 {
     /// <summary>
-    /// Swaps the boss prefab from the old BossAI over to the layered BossBrain and fills in its
+    /// Wires the boss prefab for the layered BossBrain and fills in its
     /// references.
     ///
     /// Done in code rather than by hand because the reference wiring is the part that silently
@@ -46,15 +46,9 @@ namespace DS2.EditorTools
             GameObject root = PrefabUtility.LoadPrefabContents(BossPrefab);
             try
             {
-                // The old brain has to go, not just be disabled: two things writing
-                // locomotion.MoveDirection in the same frame is the fight nobody wins.
-                var legacy = root.GetComponent<BossAI>();
-                if (legacy != null)
-                {
-                    Object.DestroyImmediate(legacy, true);
-                    Debug.Log("[DS2] Removed BossAI from the boss prefab.");
-                }
-
+                // The BossAI strip that used to live here is gone with the class itself, 20 Sep.
+                // It had been a no-op since the 11 Sep rewrite: the boss prefab has carried
+                // BossBrain and no BossAI for over a week, and nothing serialized referenced it.
                 Require<BossPerception>(root);
                 BossBrain brain = Require<BossBrain>(root);
                 Require<BossDebugHUD>(root);

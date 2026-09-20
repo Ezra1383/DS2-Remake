@@ -5,7 +5,7 @@ namespace DS2
     /// <summary>
     /// Movement shared by the player and the boss. It is a mirror match, so both bodies move the
     /// same way; only the thing deciding WHERE to go differs. PlayerLocomotion reads input,
-    /// BossAI writes MoveDirection.
+    /// BossBrain writes MoveDirection.
     ///
     /// THE IMPORTANT PART: the clips carry real horizontal displacement, and the Animator owns the
     /// transform whenever a move is playing. Everything funnels through one CharacterController.Move

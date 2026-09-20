@@ -57,7 +57,19 @@ namespace DS2
         [Tooltip("Damage taken multiplier while staggered by a parry. Matches the posture break.")]
         [SerializeField] float parryStaggerDamageMultiplier = 2f;
 
+        /// <summary>
+        /// Targets this swing has RESOLVED against - damaged or been parried by. Deliberately not
+        /// "targets this swing has touched": see TryHit for why that distinction is the whole bug.
+        /// </summary>
         readonly HashSet<CombatActor> alreadyHit = new();
+
+        /// <summary>
+        /// Targets a non-damaging outcome has already been announced for this swing. Separate from
+        /// alreadyHit because an evaded contact must NOT end the swing, but must also not re-fire
+        /// its sound and VFX on every frame the blade stays inside an invulnerable target.
+        /// </summary>
+        readonly HashSet<CombatActor> feedbackReported = new();
+
         readonly Collider[] overlaps = new Collider[16];
 
         Collider trigger;
@@ -86,6 +98,7 @@ namespace DS2
             owner = attacker;
             move = sourceMove;
             alreadyHit.Clear();
+            feedbackReported.Clear();
             trigger.enabled = true;
 
             // Start the sweep from where the blade is NOW. Carrying the pose over from the last
@@ -99,6 +112,7 @@ namespace DS2
             ReportSwing();
             trigger.enabled = false;
             alreadyHit.Clear();
+            feedbackReported.Clear();
             move = null;
             hasLastPose = false;
         }
@@ -219,7 +233,25 @@ namespace DS2
 
             CombatActor victim = hurtbox.Owner;
             if (victim == owner) return;
-            if (!alreadyHit.Add(victim)) return;
+
+            // A SWING IS SPENT BY A HIT THAT LANDED, NOT BY A HIT THAT TOUCHED.
+            //
+            // This used to be `if (!alreadyHit.Add(victim)) return;` - the target was recorded
+            // BEFORE ApplyDamage said what happened, so a contact that returned Evaded or
+            // NoEffect still burned the swing, and the real contact later in the same arc was
+            // discarded in silence.
+            //
+            // That is what made Slash 2 undamageable for BOTH actors. Its window opened at 0.080
+            // (player) and 0.095 (boss), during the wind-up, where this thin blade can clip an
+            // opponent who still has i-frames from a dodge. One throwaway touch, swing over.
+            // Slash 1 and Slash 3 open at 0.300 and 0.289 - at the contact itself - so they never
+            // got the chance to waste themselves and always worked.
+            //
+            // The proof is in the 19 Sep notes: widening the window from 0.095-0.320 to
+            // 0.080-0.478 took Slash 2 from landing 2 swings in 5 to landing never. Nothing about
+            // timing explains a wider window landing LESS. This does - more window in front of the
+            // swing is more chance to spend it on nothing.
+            if (alreadyHit.Contains(victim)) return;
 
             // Captured up front. Staggering a parried attacker interrupts their move, which calls
             // back into Close() and nulls the field - so anything read after that point would be
@@ -234,6 +266,23 @@ namespace DS2
             Vector3 from = attacker != null ? attacker.transform.position : transform.position;
             HitResult result = victim.ApplyDamage(damage, landed, from);
 
+            // NOW the swing is spent - and only for the outcomes that actually settled it.
+            // Damaged and Parried both end the exchange against this target; the alreadyHit set
+            // still guarantees one swing can never take health twice. Evaded and NoEffect leave
+            // the target eligible, so a blade that touched during i-frames can still land when
+            // those i-frames run out a few frames later in the same arc.
+            // Killed belongs here as much as Damaged does - it is the most settled outcome there
+            // is, and leaving it out would let a killing blow keep re-testing a corpse.
+            bool resolved = result == HitResult.Damaged ||
+                            result == HitResult.Killed ||
+                            result == HitResult.Parried;
+            if (resolved) alreadyHit.Add(victim);
+
+            // Non-damaging outcomes announce themselves ONCE. Without this the sweep would re-fire
+            // the evade sound and VFX every frame the blade sat inside an invulnerable target,
+            // which is a worse artefact than the silence this project already fixed once.
+            bool announce = resolved || feedbackReported.Add(victim);
+
             // The result is the whole diagnosis. "Connected" is not the same as "damaged":
             // Evaded means i-frames ate it, Parried means it was deflected, NoEffect means the
             // target was already dead. Without this, every one of those looks identical to a
@@ -241,8 +290,10 @@ namespace DS2
             if (logSweep)
                 Debug.Log($"[Hitbox] {(attacker != null ? attacker.name : "?")} " +
                           $"{landed.moveId} -> {victim.name}: {result}, dmg={damage}, " +
-                          $"victim i-frames={victim.IsInvulnerable}, parrying={victim.IsParrying}",
-                          this);
+                          $"victim i-frames={victim.IsInvulnerable}, parrying={victim.IsParrying}, " +
+                          $"swing {(resolved ? "SPENT" : "still live")}", this);
+
+            if (!announce) return;
 
             // Deflected. The victim decided that; only we hold a reference to who swung, so the
             // stagger is applied from here.

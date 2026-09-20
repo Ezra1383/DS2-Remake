@@ -142,27 +142,24 @@ namespace DS2.EditorTools
             new Spec { id = MoveId.Slash1, trackUntil = 0.26f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.52f, state = "Attack1", clip = "Attack1", measured = 2.033f,
                        damage = 8,  posture = 12, hbOpen = 0.300f, hbClose = 0.467f, cancel = 0.467f, chainTo = MoveId.Slash2, chain = 1.0f },
             new Spec { id = MoveId.Slash2, trackUntil = 0.22f, bossTrack = 240f, playerTrack = 420f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.50f, state = "Attack2", clip = "Attack2", measured = 1.833f,
-                       // RETIMED 19 Sep, TWICE - the first attempt moved it the wrong way.
+                       // RETIMED 20 Sep, and the whole 19 Sep story was wrong.
                        //
-                       // Slash 2 never damaged anything. The answer came from the boss: she runs
-                       // the SAME Attack2 clip at hitbox 0.095-0.275 and her Slash 2 lands, while
-                       // the player's 0.258-0.419 never did. So Attack2's contact is EARLY, around
-                       // 0.10-0.28 - the original window overlapped it by 0.258-0.275, one or two
-                       // frames at the very edge, which is why it read as "never".
+                       // The 19 Sep note argued Attack2's contact was EARLY (0.10-0.28) because
+                       // the boss "lands her Slash 2" at 0.095-0.275 while the player's did not.
+                       // She does not. Her Slash 2 never landed either - it was assumed, never
+                       // watched - so the window chased a phantom, and widening it toward that
+                       // phantom (0.095-0.320, then 0.080-0.478) took it from 2 swings in 5 to
+                       // none at all. A wider window landing LESS was the tell: the bug was never
+                       // timing. It was Hitbox.TryHit spending the swing on a contact that dealt
+                       // no damage, fixed there 20 Sep.
                        //
-                       // Reasoning from the swing-arc event (To_add_weapon_r-Blade at 0.475) said
-                       // late and was wrong: that event marks where the arc ENDS, not where the
-                       // blade crosses the opponent. Only the boss's working window measured the
-                       // real thing. When two actors share a clip, a window that lands on one and
-                       // not the other is the measurement - use it before reasoning from events.
-                       // WIDENED 19 Sep. 0.095-0.320 took Slash 2 from never landing to landing
-                       // about 2 swings in 5 - the right region, too narrow for where contact
-                       // actually falls. Opened out to nearly the whole trimmed move. A wide
-                       // window costs nothing here: alreadyHit caps it at one hit per swing, so
-                       // the only risk is registering slightly early, and an attack that always
-                       // connects beats a precisely-timed one that connects 40% of the time.
-                       // Still inside cancel 0.484 and moveEnd 0.50 so a chain cannot cut it.
-                       damage = 10, posture = 15, hbOpen = 0.080f, hbClose = 0.478f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
+                       // Timed off the clip's own events now, not off a comparison: the blade
+                       // leaves the hand at To_add_weapon_r-Blade, 0.871s of 1.833s = 0.475. That
+                       // is also true of Attack1, whose WORKING window is 0.300-0.467 against its
+                       // blade leaving at 0.490 - contact sits in the last third before the sword
+                       // is put away. Same shape here, and it matches Slash 1 and Slash 3 opening
+                       // at 0.300 and 0.289. Still inside cancel 0.484 and moveEnd 0.50.
+                       damage = 10, posture = 15, hbOpen = 0.300f, hbClose = 0.478f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
             new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, playerTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 

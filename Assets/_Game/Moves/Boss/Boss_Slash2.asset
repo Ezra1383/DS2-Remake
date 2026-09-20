@@ -19,8 +19,8 @@ MonoBehaviour:
   useRootMotion: 1
   damage: 10
   postureDamage: 15
-  hitboxOpen: 0.095
-  hitboxClose: 0.275
+  hitboxOpen: 0.3
+  hitboxClose: 0.478
   parryStart: 0
   parryEnd: 0
   iframeStart: 0
@@ -28,13 +28,13 @@ MonoBehaviour:
   trackUntil: 0.22
   trackDegreesPerSecond: 240
   moveEnd: 0.56
-  weaponSocket: To_Hand_R_Socket-Blade
-  endWeaponSocket: To_Hand_R_Socket-Blade
+  weaponSocket: 
+  endWeaponSocket: 
   swingSound: {fileID: 8300000, guid: 326e06a0eff19eb4588f40165de9825f, type: 3}
-  swingSoundNormalized: 0.035
+  swingSoundNormalized: 0.24000001
   impactSound: {fileID: 0}
   hitstopOverride: 0
   traumaOverride: 0
-  cancelWindow: 0.295
+  cancelWindow: 0.484
   nextInChain: {fileID: 11400000, guid: 81bd29302fcb46343b6733c927262b74, type: 2}
   chainChance: 0.5
