@@ -81,6 +81,11 @@ namespace DS2
         Quaternion lastRot;
         bool hasLastPose;
 
+        // Closest-approach diagnostic. Only populated under logSweep.
+        Hurtbox[] opposing;
+        float closestApproach;
+        float closestApproachAt;
+
         void Awake()
         {
             trigger = GetComponent<Collider>();
@@ -105,6 +110,13 @@ namespace DS2
             // swing would sweep across the gap between them - through anything standing in
             // between, and across the whole arena after a retry teleport.
             hasLastPose = false;
+
+            closestApproach = float.PositiveInfinity;
+            closestApproachAt = -1f;
+
+            // Cached per swing rather than per frame: FindObjectsByType in LateUpdate across a
+            // whole window would cost more than the sweep it is meant to explain.
+            opposing = logSweep ? FindObjectsByType<Hurtbox>(FindObjectsInactive.Exclude) : null;
         }
 
         public void Close()
@@ -158,8 +170,49 @@ namespace DS2
                 SweepAt(Vector3.Lerp(lastPos, pos, k), Quaternion.Slerp(lastRot, rot, k));
             }
 
+            TrackClosestApproach(pos);
+
             lastPos = pos;
             lastRot = rot;
+        }
+
+        /// <summary>
+        /// Records how close the blade ever got to an opponent during this swing, and at what
+        /// point in the move.
+        ///
+        /// WHY THIS EXISTS. "The window opened and nothing happened" is not a diagnosis - it is
+        /// the same sentence for a blade that swung a metre wide and for one that passed through
+        /// and was rejected. Retiming a window by reasoning about which part of a clip "looks
+        /// like" the contact has now been wrong three times on this move. This reports the number
+        /// instead: closest approach, and the normalized time it happened at. Set the window
+        /// around that and stop arguing with the animation.
+        ///
+        /// Only runs under logSweep, and only while a window is open, so it costs nothing shipped.
+        /// </summary>
+        void TrackClosestApproach(Vector3 bladePos)
+        {
+            if (!logSweep || opposing == null) return;
+
+            foreach (Hurtbox h in opposing)
+            {
+                if (h == null) continue;
+
+                // The attacker's OWN hurtbox is a few centimetres from their own blade at all
+                // times. Leaving it in would report 0.02 m on every swing and the diagnostic
+                // would say "practically touching" no matter how badly the swing missed.
+                if (h.Owner == null || h.Owner == owner) continue;
+
+                // Closest point ON the hurtbox, not its origin - a capsule's centre is a metre
+                // off the surface and would make every miss look far worse than it was.
+                Collider c = h.GetComponent<Collider>();
+                Vector3 target = c != null ? c.ClosestPoint(bladePos) : h.transform.position;
+
+                float d = Vector3.Distance(bladePos, target);
+                if (d >= closestApproach) continue;
+
+                closestApproach = d;
+                closestApproachAt = owner != null ? owner.MoveProgress : -1f;
+            }
         }
 
         /// <summary>
@@ -174,21 +227,21 @@ namespace DS2
             string who = owner != null ? owner.name : "?";
             string what = move != null ? move.moveId.ToString() : "?";
 
+            string approach = closestApproachAt >= 0f
+                ? $"closest approach {closestApproach:0.000} m at t={closestApproachAt:0.000}"
+                : "closest approach not sampled";
+
             if (alreadyHit.Count > 0)
             {
-                Debug.Log($"[Hitbox] {who} {what}: CONNECTED ({alreadyHit.Count}).", this);
+                Debug.Log($"[Hitbox] {who} {what}: CONNECTED ({alreadyHit.Count}). {approach}", this);
                 return;
             }
 
-            float nearest = float.PositiveInfinity;
-            foreach (Hurtbox h in FindObjectsByType<Hurtbox>(FindObjectsSortMode.None))
-            {
-                if (h.Owner == null || h.Owner == owner) continue;
-                nearest = Mathf.Min(nearest, Vector3.Distance(h.transform.position, transform.position));
-            }
-
-            Debug.Log($"[Hitbox] {who} {what}: window opened and closed with NO hit. " +
-                      $"Nearest hurtbox was {nearest:0.00} m from the blade.", this);
+            // The number that ends the argument. If the blade got within a few centimetres, the
+            // window is in the right place and the miss is detection or rejection. If it never got
+            // closer than a metre, no window on this clip will ever land and the swing itself is
+            // the problem - a different reach, a different move, or a fatter damage volume.
+            Debug.Log($"[Hitbox] {who} {what}: window opened and closed with NO hit. {approach}", this);
         }
 
         void SweepAt(Vector3 pos, Quaternion rot)

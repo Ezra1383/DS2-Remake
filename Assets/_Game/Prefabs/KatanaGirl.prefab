@@ -71,7 +71,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   sweepSubSteps: 5
-  logSweep: 0
+  logSweep: 1
   parryStagger: 2
   parryStaggerDamageMultiplier: 2
 --- !u!1 &3356962077000774379

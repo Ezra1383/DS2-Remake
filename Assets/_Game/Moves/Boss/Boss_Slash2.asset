@@ -19,8 +19,8 @@ MonoBehaviour:
   useRootMotion: 1
   damage: 10
   postureDamage: 15
-  hitboxOpen: 0.3
-  hitboxClose: 0.478
+  hitboxOpen: 0
+  hitboxClose: 0.4
   parryStart: 0
   parryEnd: 0
   iframeStart: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
   weaponSocket: 
   endWeaponSocket: 
   swingSound: {fileID: 8300000, guid: 326e06a0eff19eb4588f40165de9825f, type: 3}
-  swingSoundNormalized: 0.24000001
+  swingSoundNormalized: 0.02
   impactSound: {fileID: 0}
   hitstopOverride: 0
   traumaOverride: 0

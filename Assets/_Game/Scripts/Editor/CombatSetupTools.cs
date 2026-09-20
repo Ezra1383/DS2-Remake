@@ -153,13 +153,52 @@ namespace DS2.EditorTools
                        // timing. It was Hitbox.TryHit spending the swing on a contact that dealt
                        // no damage, fixed there 20 Sep.
                        //
-                       // Timed off the clip's own events now, not off a comparison: the blade
-                       // leaves the hand at To_add_weapon_r-Blade, 0.871s of 1.833s = 0.475. That
-                       // is also true of Attack1, whose WORKING window is 0.300-0.467 against its
-                       // blade leaving at 0.490 - contact sits in the last third before the sword
-                       // is put away. Same shape here, and it matches Slash 1 and Slash 3 opening
-                       // at 0.300 and 0.289. Still inside cancel 0.484 and moveEnd 0.50.
-                       damage = 10, posture = 15, hbOpen = 0.300f, hbClose = 0.478f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
+                       // 0.300-0.478 was tried and ALSO never landed, which is the measurement that
+                       // matters: Slash 1 opens at 0.300 and lands every time, Slash 2 opened at
+                       // the same instant and landed never. Same actor, same fight, same target.
+                       // So the window is not the variable and never was - four windows have now
+                       // failed (0.258-0.419, 0.095-0.275, 0.080-0.478, 0.300-0.478) and the only
+                       // one that ever produced hits managed 2 in 5.
+                       //
+                       // MEASURED 20 Sep, finally. A full-width 0.0-1.0 window plus the
+                       // closest-approach instrument settled it in one run:
+                       //
+                       //   KatanaGirl Slash2: CONNECTED. closest approach 0.372 m at t=0.162
+                       //   KatanaGirl Slash2: CONNECTED. closest approach 0.351 m at t=0.166
+                       //   Boss       Slash2: CONNECTED. closest approach 0.292 m at t=0.012
+                       //
+                       // ATTACK2'S CONTACT IS EARLY - the blade's nearest pass is t~0.16, and at
+                       // chain range it is already on the target by t~0.01. So every window from
+                       // 0.258 onward was simply behind the swing, and the 19 Sep note's "contact
+                       // is EARLY, around 0.10-0.28" was RIGHT while its reasoning was wrong. The
+                       // 20 Sep retime to 0.300, matching Slash 1 by analogy, moved it further
+                       // away and took it from rare to never.
+                       //
+                       // OPENS AT ZERO, AND THAT IS THE ONLY THING THAT WORKS.
+                       //
+                       // 0.060 was tried - skipping only the first ~79 ms to avoid registering on
+                       // Slash 1's carry-over - and it took the player's Slash 2 straight back to
+                       // never landing. The measurement says why:
+                       //
+                       //   KatanaGirl Slash2: NO hit. closest approach 0.367 m at t=0.163
+                       //   KatanaGirl Slash2: NO hit. closest approach 0.371 m at t=0.164
+                       //   KatanaGirl Slash2: NO hit. closest approach 0.376 m at t=0.161
+                       //
+                       // Identical every swing, to within 9 mm. ATTACK2'S OWN ARC NEVER REACHES
+                       // THE TARGET at chain range - the blade's nearest pass leaves 0.37 m of
+                       // air, and the only contact this move ever makes is in its first frames,
+                       // while the sword is still where Slash 1's follow-through put it.
+                       //
+                       // Note that Slash 1 CONNECTS at a closest approach of 0.382 m - further
+                       // away than Slash 2's 0.367 m miss. Distance is not what separates them;
+                       // orientation is. The blade is 1.12 m long and only 0.06 wide, so it
+                       // reaches when it points at her and passes by when it does not. No window
+                       // can fix a swing that is aimed elsewhere.
+                       //
+                       // So the chain is what lands this move, and that is accepted rather than
+                       // fought. Widening the damage volume enough to close 0.37 m would mean a
+                       // blade box wider than she is.
+                       damage = 10, posture = 15, hbOpen = 0.0f, hbClose = 0.400f, cancel = 0.484f, chainTo = MoveId.Slash3, chain = 0.5f },
             new Spec { id = MoveId.Slash3, trackUntil = 0.24f, bossTrack = 180f, playerTrack = 360f, socket = "To_Hand_R_Socket-Blade", endSocket = "To_Hand_R_Socket-Blade", end = 0.55f, state = "Attack3", clip = "Attack3", measured = 2.267f,
                        damage = 14, posture = 25, hbOpen = 0.289f, hbClose = 0.444f, cancel = 1f },
 
@@ -207,7 +246,28 @@ namespace DS2.EditorTools
             new Spec { id = MoveId.Skill2, trackUntil = 0.28f, bossTrack = 200f, playerTrack = 200f, end = 0.93f, state = "Sp_Skill2", clip = "K_Sp_Skill_2", measured = 3.867f,
                        damage = 22, posture = 34, hbOpen = 0.328f, hbClose = 0.483f, cancel = 1f },
             new Spec { id = MoveId.Skill3, trackUntil = 0.28f, bossTrack = 120f, playerTrack = 120f, end = 0.85f, state = "Sp_Skill3", clip = "Sp_Skill3", measured = 4.500f,
-                       damage = 28, posture = 40, hbOpen = 0.345f, hbClose = 0.483f, cancel = 1f },
+                       // WINDOW = THE ENTIRE TIME THE SWORD IS IN HER HAND, read off the clip's own
+                       // baked SwitchSocket events rather than guessed:
+                       //
+                       //   0.662s  To_Hand_R_Socket-Blade   -> drawn      = 0.147 normalized
+                       //   3.112s  To_add_weapon_r-Blade    -> stowed     = 0.692 normalized
+                       //
+                       // This is an IAI move: it opens with the blade at To_Katana_Close-Blade,
+                       // i.e. sheathed. The HitBox is parented to the katana, so for the first
+                       // 15% of this move the damage volume is sitting on her hip and could not
+                       // hit anything however wide the window was. Outside 0.147-0.692 there is
+                       // nothing to hit with, so there is no point looking there.
+                       //
+                       // Safe to open at the draw here in a way it is not on Slash 2: a Special is
+                       // never chained into, so no previous swing's follow-through is resting on
+                       // the target when the window opens.
+                       //
+                       // IF IT STILL MISSES, IT IS RANGE, NOT TIMING. RootXZNet is 4.44 m - this
+                       // move carries her further than the arena's whole melee band, so thrown
+                       // from close it puts her behind the target before the blade arrives. The
+                       // 20 Sep measurement is consistent with exactly that: closest approach
+                       // 0.439 m at t=0.435, then 2.167 m by t=0.482 - she is already leaving.
+                       damage = 28, posture = 40, hbOpen = 0.147f, hbClose = 0.692f, cancel = 1f },
         };
 
         // Reaction states. Note the swap: clip Hit1 is K_Hit_R.fbx, clip Hit2 is K_Hit_L.fbx.
