@@ -49,7 +49,9 @@ namespace DS2
         [SerializeField] AudioClip death;
 
         [Header("Mix")]
-        [SerializeField] [Range(0f, 1f)] float volume = 0.9f;
+        // Dropped from 0.9 to 0.675 on 20 Sep - a quarter down, by ear, once music was in. The
+        // bank was mixed against silence; against a score it was shouting.
+        [SerializeField] [Range(0f, 1f)] float volume = 0.675f;
 
         [Tooltip("Plus or minus, per play, so repeated hits never sound mechanical.")]
         [SerializeField] [Range(0f, 0.3f)] float pitchJitter = 0.05f;

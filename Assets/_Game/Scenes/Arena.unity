@@ -7211,8 +7211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DS2.ProgressionManager
   wipeOnPlay: 0
-  unlockEverything: 1
-  logUnlocks: 1
+  unlockEverything: 0
+  logUnlocks: 0
 --- !u!4 &305450535
 Transform:
   m_ObjectHideFlags: 0
@@ -24367,7 +24367,7 @@ MonoBehaviour:
     postureBreak: {fileID: 8300000, guid: f3e3c76d4def5a847b5ec7f4deb4726c, type: 3}
     postureRecover: {fileID: 8300000, guid: 11780e3aa1c47474a8958f83aa18c5d9, type: 3}
     death: {fileID: 8300000, guid: 417b1881460b5d24ca4792540c7dc05d, type: 3}
-    volume: 0.9
+    volume: 0.675
     pitchJitter: 0.05
     pitchWithPosture: 1
     posturePitchAtFull: 1.35

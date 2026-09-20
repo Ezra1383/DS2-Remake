@@ -71,7 +71,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   sweepSubSteps: 5
-  logSweep: 1
+  logSweep: 0
   parryStagger: 2
   parryStaggerDamageMultiplier: 2
 --- !u!1 &3356962077000774379
@@ -536,7 +536,7 @@ MonoBehaviour:
   hitbox: {fileID: 1682226467560313699}
   hitReaction: {fileID: 1112027277353868344}
   blendOut: 0.12
-  logHits: 1
+  logHits: 0
   damageDealtMultiplier: 1
 --- !u!114 &1284505791452900393
 MonoBehaviour:

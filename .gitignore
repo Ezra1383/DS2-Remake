@@ -65,3 +65,6 @@ crashlytics-build.properties
 # Unity Crash reports
 sysinfo.txt
 *.stackdump
+
+# Standalone player output
+/Build/

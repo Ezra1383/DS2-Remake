@@ -143,8 +143,10 @@ namespace DS2.EditorTools
             new("SFX_Swing_Special_2", () => Whoosh(0.44f, 230f, 1120f, 1.0f, 1802), 0.70f),
             new("SFX_Swing_Special_3", () => Whoosh(0.46f, 210f, 1040f, 1.0f, 1803), 0.70f),
 
-            new("SFX_Dodge_1",         () => Whoosh(0.20f, 420f, 1500f, 1.6f, 1901), 0.45f),
-            new("SFX_Dodge_2",         () => Whoosh(0.23f, 380f, 1350f, 1.6f, 1902), 0.45f),
+            // 0.45 -> 0.27 on 20 Sep, by ear. Broadband noise reads far louder than its peak
+            // suggests next to a transient, and a dodge fires more often than any attack does.
+            new("SFX_Dodge_1",         () => Whoosh(0.20f, 420f, 1500f, 1.6f, 1901), 0.27f),
+            new("SFX_Dodge_2",         () => Whoosh(0.23f, 380f, 1350f, 1.6f, 1902), 0.27f),
 
             // The iai draw and sheathe. High Q is what makes filtered noise read as sliding metal.
             new("SFX_Sheath_1",        () => Whoosh(0.30f, 900f, 4200f, 2.4f, 2001), 0.50f),
